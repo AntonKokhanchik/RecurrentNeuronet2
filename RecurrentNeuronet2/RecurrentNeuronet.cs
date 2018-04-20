@@ -117,7 +117,7 @@ namespace RecurrentNeuronet2
 				p[n][l] = Sqg1w;
 			}
 			// вычисляем ошибки скрытого слоя в промежуточных состояниях p(t) (t = 1,…,n)
-			for (int t = n - 1; t > 0; t--)
+			for (int t = n - 1; t >= 0; t--)
 			{
 				p[t] = new double[r];
 				for(int l = 0; l<r; l++)
@@ -228,10 +228,12 @@ namespace RecurrentNeuronet2
 					alpha = step;
 					x = new double[n + 1][];
 					for (int j = 0; j < n; j++)
+					{
+						x[j + 1] = new double[s];
 						if (j < enters[i].Length)
-							x[j + 1] = enters[i][j];
-						else
-							x[j + 1] = new double[s];
+							for (int k = 0; k < enters[i][j].Length; k++)
+								x[j + 1][k] = enters[i][j][k];
+					}
 
 					y = new double[m];
 					d = new double[m];
@@ -257,6 +259,7 @@ namespace RecurrentNeuronet2
 			while (I > epsilon)
 			{
 				double I_old = I;
+				// сохраняем старые веса
 				double[][] W_old = new double[m][];
 				for (int j = 0; j < m; j++)
 					W_old[j] = (double[])W[j].Clone();
