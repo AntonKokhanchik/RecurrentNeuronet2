@@ -82,18 +82,18 @@
 			// 
 			this.textBoxInnerLength.Location = new System.Drawing.Point(258, 42);
 			this.textBoxInnerLength.Minimum = new decimal(new int[] {
-			2,
-			0,
-			0,
-			0});
+            2,
+            0,
+            0,
+            0});
 			this.textBoxInnerLength.Name = "textBoxInnerLength";
 			this.textBoxInnerLength.Size = new System.Drawing.Size(59, 20);
 			this.textBoxInnerLength.TabIndex = 3;
 			this.textBoxInnerLength.Value = new decimal(new int[] {
-			2,
-			0,
-			0,
-			0});
+            4,
+            0,
+            0,
+            0});
 			// 
 			// label1
 			// 

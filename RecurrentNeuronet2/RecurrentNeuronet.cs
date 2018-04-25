@@ -41,7 +41,7 @@ namespace RecurrentNeuronet2
 		private double f(double state)
 		{
 			// tanh
-			return Math.Tanh(state); ;
+			return Math.Tanh(state);
 		}
 
 		// f1 = f' - производная f
@@ -54,15 +54,15 @@ namespace RecurrentNeuronet2
 		// g - функция активации выходного слоя
 		private double g(double state)
 		{
-			// tanh
-			return Math.Tanh(state);
+			// 1/(1-e^-x)
+			return 1 / (1 + Math.Exp(-state));
 		}
 
 		// g1 = g' - производная g
 		private double g1(double state)
 		{
 			// 1/(cosh)^2
-			return 1 / Math.Pow(Math.Cosh(state), 2);
+			return Math.Exp(-state) / Math.Pow(1 + Math.Exp(-state),2);
 		}
 
 
