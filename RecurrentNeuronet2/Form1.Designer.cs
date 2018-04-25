@@ -62,6 +62,7 @@
 			// 
 			// buttonLearn
 			// 
+			this.buttonLearn.Enabled = false;
 			this.buttonLearn.Location = new System.Drawing.Point(144, 120);
 			this.buttonLearn.Name = "buttonLearn";
 			this.buttonLearn.Size = new System.Drawing.Size(120, 22);
@@ -72,6 +73,7 @@
 			// 
 			// textBoxEpsilon
 			// 
+			this.textBoxEpsilon.Enabled = false;
 			this.textBoxEpsilon.Location = new System.Drawing.Point(227, 68);
 			this.textBoxEpsilon.Name = "textBoxEpsilon";
 			this.textBoxEpsilon.Size = new System.Drawing.Size(90, 20);
@@ -80,6 +82,7 @@
 			// 
 			// textBoxInnerLength
 			// 
+			this.textBoxInnerLength.Enabled = false;
 			this.textBoxInnerLength.Location = new System.Drawing.Point(258, 42);
 			this.textBoxInnerLength.Minimum = new decimal(new int[] {
             2,
@@ -107,6 +110,7 @@
 			// label2
 			// 
 			this.label2.AutoSize = true;
+			this.label2.Enabled = false;
 			this.label2.Location = new System.Drawing.Point(72, 44);
 			this.label2.Name = "label2";
 			this.label2.Size = new System.Drawing.Size(180, 13);
@@ -116,6 +120,7 @@
 			// label3
 			// 
 			this.label3.AutoSize = true;
+			this.label3.Enabled = false;
 			this.label3.Location = new System.Drawing.Point(72, 71);
 			this.label3.Name = "label3";
 			this.label3.Size = new System.Drawing.Size(57, 13);
@@ -160,6 +165,7 @@
 			// label5
 			// 
 			this.label5.AutoSize = true;
+			this.label5.Enabled = false;
 			this.label5.Location = new System.Drawing.Point(72, 97);
 			this.label5.Name = "label5";
 			this.label5.Size = new System.Drawing.Size(112, 13);
@@ -168,6 +174,7 @@
 			// 
 			// textBoxAlpha
 			// 
+			this.textBoxAlpha.Enabled = false;
 			this.textBoxAlpha.Location = new System.Drawing.Point(227, 94);
 			this.textBoxAlpha.Name = "textBoxAlpha";
 			this.textBoxAlpha.Size = new System.Drawing.Size(90, 20);

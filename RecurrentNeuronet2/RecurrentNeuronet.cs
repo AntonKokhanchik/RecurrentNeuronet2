@@ -40,15 +40,17 @@ namespace RecurrentNeuronet2
 		// f - функция активации скрытого слоя
 		private double f(double state)
 		{
-			// tanh
-			return Math.Tanh(state);
+			//// tanh
+			//return Math.Tanh(state);
+			return 1 / (1 + Math.Exp(-state));
 		}
 
 		// f1 = f' - производная f
 		private double f1(double state)
 		{
-			// 1/(cosh)^2
-			return 1 / Math.Pow(Math.Cosh(state), 2);
+			//// 1/(cosh)^2
+			//return 1 / Math.Pow(Math.Cosh(state), 2);
+			return Math.Exp(-state) / Math.Pow(1 + Math.Exp(-state), 2);
 		}
 
 		// g - функция активации выходного слоя
@@ -255,7 +257,50 @@ namespace RecurrentNeuronet2
 
 		private void Learn(ref bool isLearnedInThisCicle)
 		{
-			DirectPass();
+			bool IsRepeatNeeded;
+			do
+			{
+				IsRepeatNeeded = false;
+				DirectPass();
+
+				double I_old = I;
+				double[][] W_old = new double[m][];
+				for (int j = 0; j < m; j++)
+					W_old[j] = (double[])W[j].Clone();
+				double[][] U_old = new double[r][];
+				double[][] V_old = new double[r][];
+				for (int j = 0; j < r; j++)
+				{
+					U_old[j] = (double[])U[j].Clone();
+					V_old[j] = (double[])V[j].Clone();
+				}
+				double[] a_old = (double[])a.Clone();
+				double[] b_old = (double[])b.Clone();
+
+				BackwardPass();
+				WeightsChange();
+
+				isLearnedInThisCicle = true;
+
+				DirectPass();
+				if (I >= I_old)
+				{
+					alpha = alpha / 2;
+					if (alpha == 0)
+						throw new Exception("Нейросеть не может обучиться на таких данных");
+					W = W_old;
+					U = U_old;
+					V = V_old;
+					a = a_old;
+					b = b_old;
+					DirectPass();
+					IsRepeatNeeded = true;
+				}
+
+			} while (IsRepeatNeeded);
+
+
+			/*DirectPass();
 			while (I > epsilon)
 			{
 				double I_old = I;
@@ -291,7 +336,7 @@ namespace RecurrentNeuronet2
 					b = b_old;
 					DirectPass();
 				}
-			}
+			}*/
 		}
 
 		private void CalculateI()
