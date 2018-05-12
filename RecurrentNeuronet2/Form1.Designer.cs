@@ -42,6 +42,10 @@
 			this.label4 = new System.Windows.Forms.Label();
 			this.label5 = new System.Windows.Forms.Label();
 			this.textBoxAlpha = new System.Windows.Forms.TextBox();
+			this.buttonExitFile = new System.Windows.Forms.Button();
+			this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
+			this.textBoxTime = new System.Windows.Forms.TextBox();
+			this.label6 = new System.Windows.Forms.Label();
 			((System.ComponentModel.ISupportInitialize)(this.textBoxInnerLength)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -63,7 +67,7 @@
 			// buttonLearn
 			// 
 			this.buttonLearn.Enabled = false;
-			this.buttonLearn.Location = new System.Drawing.Point(144, 120);
+			this.buttonLearn.Location = new System.Drawing.Point(141, 141);
 			this.buttonLearn.Name = "buttonLearn";
 			this.buttonLearn.Size = new System.Drawing.Size(120, 22);
 			this.buttonLearn.TabIndex = 1;
@@ -181,11 +185,45 @@
 			this.textBoxAlpha.TabIndex = 2;
 			this.textBoxAlpha.Text = "3";
 			// 
+			// buttonExitFile
+			// 
+			this.buttonExitFile.Location = new System.Drawing.Point(12, 254);
+			this.buttonExitFile.Name = "buttonExitFile";
+			this.buttonExitFile.Size = new System.Drawing.Size(172, 24);
+			this.buttonExitFile.TabIndex = 0;
+			this.buttonExitFile.Text = "Записать результат в файл";
+			this.buttonExitFile.UseVisualStyleBackColor = true;
+			this.buttonExitFile.Click += new System.EventHandler(this.buttonExitFile_Click);
+			// 
+			// saveFileDialog1
+			// 
+			this.saveFileDialog1.FileOk += new System.ComponentModel.CancelEventHandler(this.saveFileDialog1_FileOk);
+			// 
+			// textBoxTime
+			// 
+			this.textBoxTime.Enabled = false;
+			this.textBoxTime.Location = new System.Drawing.Point(227, 115);
+			this.textBoxTime.Name = "textBoxTime";
+			this.textBoxTime.Size = new System.Drawing.Size(90, 20);
+			this.textBoxTime.TabIndex = 2;
+			this.textBoxTime.Text = "5";
+			// 
+			// label6
+			// 
+			this.label6.AutoSize = true;
+			this.label6.Enabled = false;
+			this.label6.Location = new System.Drawing.Point(72, 118);
+			this.label6.Name = "label6";
+			this.label6.Size = new System.Drawing.Size(89, 13);
+			this.label6.TabIndex = 4;
+			this.label6.Text = "Время обучения";
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(411, 260);
+			this.ClientSize = new System.Drawing.Size(411, 286);
+			this.Controls.Add(this.label6);
 			this.Controls.Add(this.label5);
 			this.Controls.Add(this.label3);
 			this.Controls.Add(this.label2);
@@ -194,10 +232,12 @@
 			this.Controls.Add(this.textBoxInnerLength);
 			this.Controls.Add(this.textBoxString);
 			this.Controls.Add(this.textBoxAnswer);
+			this.Controls.Add(this.textBoxTime);
 			this.Controls.Add(this.textBoxAlpha);
 			this.Controls.Add(this.textBoxEpsilon);
 			this.Controls.Add(this.buttonAnswer);
 			this.Controls.Add(this.buttonLearn);
+			this.Controls.Add(this.buttonExitFile);
 			this.Controls.Add(this.buttonSelectFile);
 			this.Name = "Form1";
 			this.Text = "Рекуррентная ИНС";
@@ -223,6 +263,10 @@
 		private System.Windows.Forms.Label label4;
 		private System.Windows.Forms.Label label5;
 		private System.Windows.Forms.TextBox textBoxAlpha;
+		private System.Windows.Forms.Button buttonExitFile;
+		private System.Windows.Forms.SaveFileDialog saveFileDialog1;
+		private System.Windows.Forms.TextBox textBoxTime;
+		private System.Windows.Forms.Label label6;
 	}
 }
 

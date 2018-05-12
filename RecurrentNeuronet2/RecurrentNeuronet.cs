@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -177,9 +178,11 @@ namespace RecurrentNeuronet2
 		// Обратная связь
 
 		public RecurrentNeuronet(double[/*строк*/][/*слов*/][/*размерность слова*/] enters,
-			int innerLength, double accuracy, double step)
+			int innerLength, double accuracy, double step, int learnTime)
 		{
 			// сюда ещё можно исключений набросать, валидаторов
+			Stopwatch stopwatch = new Stopwatch();
+			stopwatch.Start();
 			
 			n = maxInnerLength(enters);
 			r = innerLength;
@@ -252,7 +255,7 @@ namespace RecurrentNeuronet2
 
 					Learn(ref isLearnedInThisCicle);
 				}
-			} while (isLearnedInThisCicle);
+			} while (isLearnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime);
 		}
 
 		private void Learn(ref bool isLearnedInThisCicle)

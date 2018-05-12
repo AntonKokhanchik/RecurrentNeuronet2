@@ -35,36 +35,78 @@ namespace RecurrentNeuronet2
 			label2.Enabled = true;
 			label3.Enabled = true;
 			label5.Enabled = true;
+			label6.Enabled = true;
 			textBoxInnerLength.Enabled = true;
 			textBoxEpsilon.Enabled = true;
 			textBoxAlpha.Enabled = true;
 			buttonLearn.Enabled = true;
+			textBoxTime.Enabled = true;
 		}
 
         private string[][] getWords()
         {
             List<string[]> text = new List<string[]>();
-            StreamReader file = new StreamReader(openFileDialog1.OpenFile(), Encoding.UTF8);
- 
-            string s = file.ReadLine();
-            while (s != null)
-            {
-                text.Add(s.Split(' '));
-                s = file.ReadLine();
-            }
-
-            return text.ToArray();
+			using (StreamReader file = new StreamReader(openFileDialog1.OpenFile(), Encoding.UTF8))
+			{
+				string s = file.ReadLine();
+				while (s != null)
+				{
+					text.Add(s.Split(' '));
+					s = file.ReadLine();
+				}
+			}
+			return text.ToArray();
         }
 
 		private void buttonLearn_Click(object sender, EventArgs e)
 		{
 			neuronet = new RecurrentNeuronet(encodedText, 
-				Int32.Parse(textBoxInnerLength.Value.ToString()), double.Parse(textBoxEpsilon.Text), double.Parse(textBoxAlpha.Text));
+				Int32.Parse(textBoxInnerLength.Value.ToString()), double.Parse(textBoxEpsilon.Text), 
+				double.Parse(textBoxAlpha.Text), int.Parse(textBoxTime.Text));
 		}
 
 		private void buttonAnswer_Click(object sender, EventArgs e)
 		{
 			textBoxAnswer.Text = neuronet.Answer(encoder.EncodeString(textBoxString.Text)).ToString();
+		}
+
+		private void buttonExitFile_Click(object sender, EventArgs e)
+		{
+			saveFileDialog1.ShowDialog();
+		}
+
+		private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
+		{
+			using (StreamWriter sw = new StreamWriter(saveFileDialog1.OpenFile()))
+			{
+				//	sw.WriteLine("Номер предложения\tзначения весов");
+				//	sw.WriteLine("------------");
+
+				//for(int i=0; i<encodedText.Length; i++)
+				//{
+				//	double[] answer = neuronet.Answer(encodedText[i]);
+				//	StringBuilder sb = new StringBuilder(i.ToString());
+				//	for (int j = 0; j < answer.Length; j++)
+				//		sb.AppendFormat("\t{0:N6}", answer[j]);
+				//	sw.WriteLine(sb.ToString());
+				//	sw.WriteLine("------------");
+				//}
+				double[][] answers = new double[encodedText.Length][];
+				StringBuilder sb = new StringBuilder("\t");
+				for (int i = 0; i < encodedText.Length; i++)
+				{
+					answers[i] = neuronet.Answer(encodedText[i]);
+					sb.AppendFormat("{0}\t", i+1);
+				}
+				sw.WriteLine(sb.ToString());
+				for (int i = 0; i < answers[0].Length; i++)
+				{
+					sb = new StringBuilder((i+1).ToString());
+					for (int j = 0; j < answers.Length; j++)
+						sb.AppendFormat("\t{0:N5}", answers[j][i]);
+					sw.WriteLine(sb.ToString());
+				}
+			}
 		}
 	}
 }
