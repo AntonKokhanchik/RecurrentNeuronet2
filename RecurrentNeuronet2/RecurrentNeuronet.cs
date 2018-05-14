@@ -228,82 +228,43 @@ namespace RecurrentNeuronet2
 			do
 			{
 				isLearnedInThisCicle = false;
-				for (int i = 0; i < m; i++)
+				for (int l = 0; l < 5; l++)
 				{
-					alpha = step;
-					x = new double[n + 1][];
-					for (int j = 0; j < n; j++)
+					for (int i = 0; i < l; i++)
 					{
-						x[j + 1] = new double[s];
-						if (j < enters[i].Length)
-							for (int k = 0; k < enters[i][j].Length; k++)
-								x[j + 1][k] = enters[i][j][k];
+						alpha = step;
+						x = new double[n + 1][];
+						for (int j = 0; j < n; j++)
+						{
+							x[j + 1] = new double[s];
+							if (j < enters[i].Length)
+								for (int k = 0; k < enters[i][j].Length; k++)
+									x[j + 1][k] = enters[i][j][k];
+						}
+
+						y = new double[m];
+						d = new double[m];
+						d[i] = 1;
+
+						h = new double[n + 1][];
+						state = new double[n + 1][];
+						finalState = new double[m];
+						for (int j = 0; j <= n; j++)
+						{
+							h[j] = new double[r];
+							state[j] = new double[r];
+						}
+
+						Learn(ref isLearnedInThisCicle);
 					}
-
-					y = new double[m];
-					d = new double[m];
-					d[i] = 1;
-
-					h = new double[n + 1][];
-					state = new double[n + 1][];
-					finalState = new double[m];
-					for (int j = 0; j <= n; j++)
-					{
-						h[j] = new double[r];
-						state[j] = new double[r];
-					}
-
-					Learn(ref isLearnedInThisCicle);
 				}
 			} while (isLearnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime);
 		}
 
 		private void Learn(ref bool isLearnedInThisCicle)
 		{
-			bool IsRepeatNeeded;
-			do
-			{
-				IsRepeatNeeded = false;
-				DirectPass();
-
-				double I_old = I;
-				double[][] W_old = new double[m][];
-				for (int j = 0; j < m; j++)
-					W_old[j] = (double[])W[j].Clone();
-				double[][] U_old = new double[r][];
-				double[][] V_old = new double[r][];
-				for (int j = 0; j < r; j++)
-				{
-					U_old[j] = (double[])U[j].Clone();
-					V_old[j] = (double[])V[j].Clone();
-				}
-				double[] a_old = (double[])a.Clone();
-				double[] b_old = (double[])b.Clone();
-
-				BackwardPass();
-				WeightsChange();
-
-				isLearnedInThisCicle = true;
-
-				DirectPass();
-				if (I >= I_old)
-				{
-					alpha = alpha / 2;
-					if (alpha == 0)
-						throw new Exception("Нейросеть не может обучиться на таких данных");
-					W = W_old;
-					U = U_old;
-					V = V_old;
-					a = a_old;
-					b = b_old;
-					DirectPass();
-					IsRepeatNeeded = true;
-				}
-
-			} while (IsRepeatNeeded);
-
-
-			/*DirectPass();
+			
+			DirectPass();
 			while (I > epsilon)
 			{
 				double I_old = I;
@@ -339,7 +300,7 @@ namespace RecurrentNeuronet2
 					b = b_old;
 					DirectPass();
 				}
-			}*/
+			}
 		}
 
 		private void CalculateI()

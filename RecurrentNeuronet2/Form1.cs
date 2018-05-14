@@ -79,18 +79,6 @@ namespace RecurrentNeuronet2
 		{
 			using (StreamWriter sw = new StreamWriter(saveFileDialog1.OpenFile()))
 			{
-				//	sw.WriteLine("Номер предложения\tзначения весов");
-				//	sw.WriteLine("------------");
-
-				//for(int i=0; i<encodedText.Length; i++)
-				//{
-				//	double[] answer = neuronet.Answer(encodedText[i]);
-				//	StringBuilder sb = new StringBuilder(i.ToString());
-				//	for (int j = 0; j < answer.Length; j++)
-				//		sb.AppendFormat("\t{0:N6}", answer[j]);
-				//	sw.WriteLine(sb.ToString());
-				//	sw.WriteLine("------------");
-				//}
 				double[][] answers = new double[encodedText.Length][];
 				StringBuilder sb = new StringBuilder("\t");
 				for (int i = 0; i < encodedText.Length; i++)
@@ -99,11 +87,17 @@ namespace RecurrentNeuronet2
 					sb.AppendFormat("{0}\t", i+1);
 				}
 				sw.WriteLine(sb.ToString());
-				for (int i = 0; i < answers[0].Length; i++)
+				for (int i = 0; i < encodedText.Length; i++)
 				{
 					sb = new StringBuilder((i+1).ToString());
-					for (int j = 0; j < answers.Length; j++)
-						sb.AppendFormat("\t{0:N5}", answers[j][i]);
+					for (int j = 0; j < encodedText[i].Length; j++)
+					{
+						sb.AppendFormat(" \t{0}", encodedText[i][j][0]);
+					}
+					sw.WriteLine(sb.ToString());
+					sb = new StringBuilder((i + 1).ToString());
+					for (int j = 0; j < answers[0].Length; j++)
+						sb.AppendFormat("\t{0:N5}", answers[i][j]);
 					sw.WriteLine(sb.ToString());
 				}
 			}
