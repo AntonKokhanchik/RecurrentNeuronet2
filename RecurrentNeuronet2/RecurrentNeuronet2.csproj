@@ -45,7 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Encoder.cs" />
+    <Compile Include="EmptyEncoder.cs" />
+    <Compile Include="IEncoder.cs" />
+    <Compile Include="FrequencyEncoder.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

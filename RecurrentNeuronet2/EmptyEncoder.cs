@@ -6,22 +6,28 @@ using System.Threading.Tasks;
 
 namespace RecurrentNeuronet2
 {
-	class SumEncoder : IEncoder
+	class EmptyEncoder : IEncoder
 	{
 		private Dictionary<string, double> dictionary;
 
-		public SumEncoder(string[][] text)
+		public EmptyEncoder(string[][] text)
 		{
 			dictionary = new Dictionary<string, double>();
 			for (int i = 0; i < text.Length; i++)
 				for (int j = 0; j < text[i].Length; j++)
 					if (!dictionary.ContainsKey(text[i][j]))
-					{
-						int s = 0;
-						for (int k = 0; k < text[i][j].Length; k++)
-							s += (int)text[i][j][k];
-						dictionary.Add(text[i][j], s);
-					}
+						dictionary.Add(text[i][j], double.Parse(text[i][j]));
+		}
+
+		public double[][] EncodeString(string s)
+		{
+			string[] words = s.Split(' ');
+			double[][] answer = new double[words.Length][];
+
+			for (int i = 0; i < words.Length; i++)
+				answer[i] = new double[] { dictionary[words[i]] };
+
+			return answer;
 		}
 
 		public double[][][] EncodeText(string[][] text)
@@ -34,17 +40,6 @@ namespace RecurrentNeuronet2
 				for (int j = 0; j < text[i].Length; j++)
 					answer[i][j] = new double[] { dictionary[text[i][j]] };
 			}
-			return answer;
-		}
-
-		public double[][] EncodeString(string s)
-		{
-			string[] words = s.Split(' ');
-			double[][] answer = new double[words.Length][];
-
-			for (int i = 0; i < words.Length; i++)
-				answer[i] = new double[] { dictionary[words[i]] };
-
 			return answer;
 		}
 	}

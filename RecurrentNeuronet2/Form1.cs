@@ -13,7 +13,7 @@ namespace RecurrentNeuronet2
 {
     public partial class Form1 : Form
     {
-        SumEncoder encoder;
+        IEncoder encoder;
         RecurrentNeuronet neuronet;
 		double[][][] encodedText;
 
@@ -30,7 +30,7 @@ namespace RecurrentNeuronet2
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             string[][] text = getWords();
-            encoder = new SumEncoder(text);
+            encoder = new EmptyEncoder(text);
 			encodedText = encoder.EncodeText(text);
 			label2.Enabled = true;
 			label3.Enabled = true;

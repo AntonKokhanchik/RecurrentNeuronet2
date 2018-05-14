@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace RecurrentNeuronet2
 {
-	class Encoder
+	class FrequencyEncoder : IEncoder
 	{
 		private Dictionary<string, double> dictionary;
 
-		public Encoder(string[][] text)
+		public FrequencyEncoder(string[][] text)
 		{
 			dictionary = new Dictionary<string, double>();
 			double wordsCount = 0;

@@ -101,6 +101,13 @@ namespace RecurrentNeuronet2
 			CalculateI();
 		}
 
+		private void CalculateI()
+		{
+			I = 0;
+			for (int i = 0; i < m; i++)
+				I += (d[i] - y[i]) * (d[i] - y[i]);
+		}
+
 		// Обратный проход:
 		private void BackwardPass()
 		{
@@ -184,7 +191,7 @@ namespace RecurrentNeuronet2
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
 			
-			n = maxInnerLength(enters);
+			n = MaxInnerLength(enters);
 			r = innerLength;
 			s = enters[0][0].Length;
 			m = enters.Length;
@@ -196,7 +203,7 @@ namespace RecurrentNeuronet2
 			{
 				V[i] = new double[s];
 				for (int j = 0; j < s; j++)
-					V[i][j] = 1;
+					V[i][j] = i+j;
 			}
 
 			U = new double[r][];
@@ -204,7 +211,7 @@ namespace RecurrentNeuronet2
 			{
 				U[i] = new double[r];
 				for (int j = 0; j < r; j++)
-					U[i][j] = 1;
+					U[i][j] = i-j;
 			}
 
 			W = new double[m][];
@@ -212,16 +219,16 @@ namespace RecurrentNeuronet2
 			{
 				W[i] = new double[r];
 				for (int j = 0; j < r; j++)
-					W[i][j] = 1;
+					W[i][j] = -i-j;
 			}
 
 			a = new double[r];
 			for (int j = 0; j < r; j++)
-				a[j] = 1;
+				a[j] = j+3;
 
 			b = new double[m];
 			for (int i = 0; i < m; i++)
-				b[i] = 1;
+				b[i] = i-8;
 
 
 			bool isLearnedInThisCicle;
@@ -303,13 +310,6 @@ namespace RecurrentNeuronet2
 			}
 		}
 
-		private void CalculateI()
-		{
-			I = 0;
-			for (int i = 0; i < m; i++)
-				I += (d[i] - y[i]) * (d[i] - y[i]);
-		}
-
 		public double[] Answer(double[][] enter)
 		{
 			x = new double[n + 1][];
@@ -324,7 +324,7 @@ namespace RecurrentNeuronet2
 
 
 		// вспомогательное
-		private int maxInnerLength(double[][][] a)
+		private int MaxInnerLength(double[][][] a)
 		{
 			int max = a[0].Length;
 			for (int i = 1; i < a.Length; i++)
