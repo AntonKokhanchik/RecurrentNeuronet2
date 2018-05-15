@@ -29,12 +29,14 @@ namespace RecurrentNeuronet2
 		private double[/*n+1*/][/*r*/] state;
 		private double[/*m*/] finalState;
 
-		double[/*m*/] q;
-		double[/*n+1*/][/*r*/] p; // множители Лагранжа
-	
-		double alpha; // скорость обучения
-		double epsilon; // точность
-		double I; // ошибка
+		private double[/*m*/] q;
+		private double[/*n+1*/][/*r*/] p; // множители Лагранжа
+
+		private double alpha; // скорость обучения
+		private double epsilon; // точность
+		private double I; // ошибка
+
+		public StringBuilder info;
 
 		// Функции
 
@@ -43,7 +45,7 @@ namespace RecurrentNeuronet2
 		{
 			//// tanh
 			//return Math.Tanh(state);
-			return 1 / (1 + Math.Exp(-state));
+			return 1 / (1 + Math.Exp(-0.01*state));
 		}
 
 		// f1 = f' - производная f
@@ -51,7 +53,7 @@ namespace RecurrentNeuronet2
 		{
 			//// 1/(cosh)^2
 			//return 1 / Math.Pow(Math.Cosh(state), 2);
-			return Math.Exp(-state) / Math.Pow(1 + Math.Exp(-state), 2);
+			return 0.01*Math.Exp(-0.01*state) / Math.Pow(1 + Math.Exp(-0.01*state), 2);
 		}
 
 		// g - функция активации выходного слоя
@@ -190,6 +192,7 @@ namespace RecurrentNeuronet2
 			// сюда ещё можно исключений набросать, валидаторов
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
+			info = new StringBuilder("");
 			
 			n = MaxInnerLength(enters);
 			r = innerLength;
@@ -237,7 +240,7 @@ namespace RecurrentNeuronet2
 				isLearnedInThisCicle = false;
 				for (int l = 0; l < m; l++)
 				{
-					for (int i = 0; i < l; i++)
+					for (int i = 0; i <= l; i++)
 					{
 						alpha = step;
 						x = new double[n + 1][];
@@ -262,18 +265,23 @@ namespace RecurrentNeuronet2
 							state[j] = new double[r];
 						}
 
-						Learn(ref isLearnedInThisCicle);
+						int iterations = Learn(ref isLearnedInThisCicle);
+						info.AppendFormat("from 0 to {0} ({1}): {2} iterations", l-1, i, iterations).AppendLine();
 					}
+					if (stopwatch.Elapsed.Minutes > learnTime)
+						break;
 				}
 			} while (isLearnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime);
 		}
 
-		private void Learn(ref bool isLearnedInThisCicle)
+		private int Learn(ref bool isLearnedInThisCicle)
 		{
 			
 			DirectPass();
+			int iterations = 0;
 			while (I > epsilon)
 			{
+				iterations++;
 				double I_old = I;
 				// сохраняем старые веса
 				double[][] W_old = new double[m][];
@@ -297,6 +305,7 @@ namespace RecurrentNeuronet2
 				DirectPass();
 				if (I >= I_old)
 				{
+					iterations--;
 					alpha = alpha / 2;
 					if (alpha == 0)
 						throw new Exception("Нейросеть не может обучиться на таких данных");
@@ -308,6 +317,7 @@ namespace RecurrentNeuronet2
 					DirectPass();
 				}
 			}
+			return iterations;
 		}
 
 		public double[] Answer(double[][] enter)

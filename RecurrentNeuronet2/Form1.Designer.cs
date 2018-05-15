@@ -46,6 +46,8 @@
 			this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
 			this.textBoxTime = new System.Windows.Forms.TextBox();
 			this.label6 = new System.Windows.Forms.Label();
+			this.saveFileDialog2 = new System.Windows.Forms.SaveFileDialog();
+			this.buttonSaveDebug = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.textBoxInnerLength)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -218,11 +220,26 @@
 			this.label6.TabIndex = 4;
 			this.label6.Text = "Время обучения";
 			// 
+			// saveFileDialog2
+			// 
+			this.saveFileDialog2.FileOk += new System.ComponentModel.CancelEventHandler(this.saveFileDialog2_FileOk);
+			// 
+			// buttonSaveDebug
+			// 
+			this.buttonSaveDebug.Location = new System.Drawing.Point(205, 255);
+			this.buttonSaveDebug.Name = "buttonSaveDebug";
+			this.buttonSaveDebug.Size = new System.Drawing.Size(194, 23);
+			this.buttonSaveDebug.TabIndex = 5;
+			this.buttonSaveDebug.Text = "Записать отладочную информацию";
+			this.buttonSaveDebug.UseVisualStyleBackColor = true;
+			this.buttonSaveDebug.Click += new System.EventHandler(this.buttonSaveDebug_Click);
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(411, 286);
+			this.Controls.Add(this.buttonSaveDebug);
 			this.Controls.Add(this.label6);
 			this.Controls.Add(this.label5);
 			this.Controls.Add(this.label3);
@@ -267,6 +284,8 @@
 		private System.Windows.Forms.SaveFileDialog saveFileDialog1;
 		private System.Windows.Forms.TextBox textBoxTime;
 		private System.Windows.Forms.Label label6;
+		private System.Windows.Forms.SaveFileDialog saveFileDialog2;
+		private System.Windows.Forms.Button buttonSaveDebug;
 	}
 }
 

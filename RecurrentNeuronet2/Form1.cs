@@ -30,7 +30,7 @@ namespace RecurrentNeuronet2
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
         {
             string[][] text = getWords();
-            encoder = new EmptyEncoder(text);
+            encoder = new SumEncoder(text);
 			encodedText = encoder.EncodeText(text);
 			label2.Enabled = true;
 			label3.Enabled = true;
@@ -67,7 +67,7 @@ namespace RecurrentNeuronet2
 
 		private void buttonAnswer_Click(object sender, EventArgs e)
 		{
-			textBoxAnswer.Text = neuronet.Answer(encoder.EncodeString(textBoxString.Text)).ToString();
+			textBoxAnswer.Text = String.Concat(neuronet.Answer(encoder.EncodeString(textBoxString.Text)));
 		}
 
 		private void buttonExitFile_Click(object sender, EventArgs e)
@@ -83,7 +83,7 @@ namespace RecurrentNeuronet2
 				StringBuilder sb = new StringBuilder("\t");
 				for (int i = 0; i < encodedText.Length; i++)
 				{
-					answers[i] = neuronet.Answer(encodedText[i]);
+					answers[i] = (double[])neuronet.Answer(encodedText[i]).Clone();
 					sb.AppendFormat("{0}\t", i+1);
 				}
 				sw.WriteLine(sb.ToString());
@@ -100,6 +100,19 @@ namespace RecurrentNeuronet2
 						sb.AppendFormat("\t{0:N5}", answers[i][j]);
 					sw.WriteLine(sb.ToString());
 				}
+			}
+		}
+
+		private void buttonSaveDebug_Click(object sender, EventArgs e)
+		{
+			saveFileDialog2.ShowDialog();
+		}
+
+		private void saveFileDialog2_FileOk(object sender, CancelEventArgs e)
+		{
+			using (StreamWriter sw = new StreamWriter(saveFileDialog2.OpenFile()))
+			{
+				sw.Write(neuronet.info.ToString());
 			}
 		}
 	}
