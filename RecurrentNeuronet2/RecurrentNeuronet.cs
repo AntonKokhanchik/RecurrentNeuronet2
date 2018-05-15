@@ -266,7 +266,7 @@ namespace RecurrentNeuronet2
 						}
 
 						int iterations = Learn(ref isLearnedInThisCicle);
-						info.AppendFormat("from 0 to {0} ({1}): {2} iterations", l-1, i, iterations).AppendLine();
+						info.AppendFormat("from 0 to {0} ({1}): {2} iterations", l, i, iterations).AppendLine();
 					}
 					if (stopwatch.Elapsed.Minutes > learnTime)
 						break;
@@ -306,7 +306,7 @@ namespace RecurrentNeuronet2
 				if (I >= I_old)
 				{
 					iterations--;
-					alpha = alpha / 2;
+					alpha -= alpha*0.2;
 					if (alpha == 0)
 						throw new Exception("Нейросеть не может обучиться на таких данных");
 					W = W_old;
