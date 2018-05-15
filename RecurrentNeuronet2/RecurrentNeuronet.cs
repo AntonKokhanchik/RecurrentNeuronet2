@@ -235,7 +235,7 @@ namespace RecurrentNeuronet2
 			do
 			{
 				isLearnedInThisCicle = false;
-				for (int l = 0; l < 5; l++)
+				for (int l = 0; l < m; l++)
 				{
 					for (int i = 0; i < l; i++)
 					{
