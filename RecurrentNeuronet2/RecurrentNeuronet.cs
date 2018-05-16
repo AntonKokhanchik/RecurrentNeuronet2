@@ -45,7 +45,7 @@ namespace RecurrentNeuronet2
 		{
 			//// tanh
 			//return Math.Tanh(state);
-			return 1 / (1 + Math.Exp(-0.01*state));
+			return 1 / (1 + Math.Exp(-0.0001*state));
 		}
 
 		// f1 = f' - производная f
@@ -53,7 +53,7 @@ namespace RecurrentNeuronet2
 		{
 			//// 1/(cosh)^2
 			//return 1 / Math.Pow(Math.Cosh(state), 2);
-			return 0.01*Math.Exp(-0.01*state) / Math.Pow(1 + Math.Exp(-0.01*state), 2);
+			return 0.0001*Math.Exp(-0.0001*state) / Math.Pow(1 + Math.Exp(-0.0001*state), 2);
 		}
 
 		// g - функция активации выходного слоя
@@ -238,9 +238,9 @@ namespace RecurrentNeuronet2
 			do
 			{
 				isLearnedInThisCicle = false;
-				for (int l = 0; l < m; l++)
-				{
-					for (int i = 0; i <= l; i++)
+				//for (int l = 0; l < m; l++)
+				//{
+					for (int i = 0; i < m; i++)
 					{
 						alpha = step;
 						x = new double[n + 1][];
@@ -266,11 +266,12 @@ namespace RecurrentNeuronet2
 						}
 
 						int iterations = Learn(ref isLearnedInThisCicle);
-						info.AppendFormat("from 0 to {0} ({1}): {2} iterations", l, i, iterations).AppendLine();
+						//info.AppendFormat("from 0 to {0} ({1}): {2} iterations", l, i, iterations).AppendLine();
+						info.AppendFormat("string {0}: {1} iterations", i, iterations).AppendLine();
 					}
 					if (stopwatch.Elapsed.Minutes > learnTime)
 						break;
-				}
+				//}
 			} while (isLearnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime);
 		}
 
@@ -306,7 +307,7 @@ namespace RecurrentNeuronet2
 				if (I >= I_old)
 				{
 					iterations--;
-					alpha -= alpha*0.2;
+					alpha /= 2;
 					if (alpha == 0)
 						throw new Exception("Нейросеть не может обучиться на таких данных");
 					W = W_old;
