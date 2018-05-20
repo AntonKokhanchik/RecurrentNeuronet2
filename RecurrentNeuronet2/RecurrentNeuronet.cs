@@ -32,7 +32,11 @@ namespace RecurrentNeuronet2
 		private double[/*m*/] q;
 		private double[/*n+1*/][/*r*/] p; // множители Лагранжа
 
-		private double alpha; // скорость обучения
+		private double alpha_U; // скорость обучения
+		private double alpha_W;
+		private double alpha_V;
+		private double alpha_a;
+		private double alpha_b;
 		private double epsilon; // точность
 		private double I; // ошибка
 
@@ -143,16 +147,17 @@ namespace RecurrentNeuronet2
 		}
 
 		// 3. Вычисляем изменение весов:
-		private void WeightsChange()
+		private void WeightsChange(bool badCase)
 		{
+			if (!badCase)
+				CalculateAlpha();
 			for (int l = 0; l < m; l++)
 			{
 				// dW
 				for (int k = 0; k < r; k++)
-					W[l][k] -= alpha * q[l] * g1(finalState[l]) * h[n][k];
-				
+					W[l][k] -= alpha_W * q[l] * g1(finalState[l]) * h[n][k];
 				// db
-				b[l] -= alpha * q[l] * g1(finalState[l]);
+				b[l] -= alpha_b * q[l] * g1(finalState[l]);
 			}
 
 			for (int l = 0; l < r; l++)
@@ -163,7 +168,7 @@ namespace RecurrentNeuronet2
 					double Spf1h = 0;
 					for (int t = 0; t < n; t++)
 						Spf1h += p[t + 1][l] * f1(state[t + 1][l]) * h[t][k];
-					U[l][k] -= alpha * Spf1h;
+					U[l][k] -= alpha_U * Spf1h;
 				}
 
 				// dV
@@ -172,22 +177,94 @@ namespace RecurrentNeuronet2
 					double Spf1x = 0;
 					for (int t = 0; t < n; t++)
 						Spf1x += p[t + 1][l] * f1(state[t + 1][l]) * x[t+1][k];
-					V[l][k] -= alpha * Spf1x;
+					V[l][k] -= alpha_V * Spf1x;
 				}
 
 				// da
 				double Spf1 = 0;
 				for (int t = 0; t < n; t++)
 					Spf1 += p[t + 1][l] * f1(state[t + 1][l]);
-				a[l] -= alpha * Spf1;
+				a[l] -= alpha_a * Spf1;
 			}
 		}
 
+		private void CalculateAlpha()
+		{
+			double dmax = 0;
+			double max = 0;
+			//W
+			for (int l = 0; l < W.Length; l++)
+				for (int k = 0; k < W[l].Length; k++)
+				{
+					double tmp = q[l] * g1(finalState[l]) * h[n][k];
+					if (dmax < tmp)
+						dmax = tmp;
+					if (max < W[l][k])
+						max = W[l][k];
+				}
+			alpha_W = 0.1 * max / dmax;
+			dmax = 0;
+			max = 0;
+			//U
+			for (int l = 0; l < r; l++)
+				for (int k = 0; k < r; k++)
+				{
+					double tmp = 0;
+					for (int t = 0; t < n; t++)
+						tmp += p[t + 1][l] * f1(state[t + 1][l]) * h[t][k];
+					if (dmax < tmp)
+						dmax = tmp;
+					if (max < U[l][k])
+						max = U[l][k];
+				}
+			alpha_U = 0.1 * max / dmax;
+			dmax = 0;
+			max = 0;
+			//V
+			for (int l = 0; l < r; l++)
+				for (int k = 0; k < s; k++)
+				{
+					double tmp = 0;
+					for (int t = 0; t < n; t++)
+						tmp += p[t + 1][l] * f1(state[t + 1][l]) * x[t + 1][k];
+					if (dmax < tmp)
+						dmax = tmp;
+					if (max < V[l][k])
+						max = V[l][k];
+				}
+			alpha_V = 0.1 * max / dmax;
+			dmax = 0;
+			max = 0;
+			//a
+			for (int l = 0; l < r; l++)
+			{
+				double tmp = 0;
+				for (int t = 0; t < n; t++)
+					tmp += p[t + 1][l] * f1(state[t + 1][l]);
+				if (dmax < tmp)
+					dmax = tmp;
+				if (max < a[l])
+					max = a[l];
+			}
+			alpha_a = 0.1 * max / dmax;
+			dmax = 0;
+			max = 0;
+			//b
+			for (int l = 0; l < m; l++)
+			{
+				double tmp = q[l] * g1(finalState[l]);
+				if (dmax < tmp)
+					dmax = tmp;
+				if (max < b[l])
+					max = b[l];
+			}
+			alpha_b = 0.1 * max / dmax;
+		}
 
 		// Обратная связь
 
 		public RecurrentNeuronet(double[/*строк*/][/*слов*/][/*размерность слова*/] enters,
-			int innerLength, double accuracy, double step, int learnTime)
+		int innerLength, double accuracy, double step, int learnTime)
 		{
 			// сюда ещё можно исключений набросать, валидаторов
 			Stopwatch stopwatch = new Stopwatch();
@@ -242,7 +319,7 @@ namespace RecurrentNeuronet2
 				//{
 					for (int i = 0; i < m; i++)
 					{
-						alpha = step;
+						alpha  = step;
 						x = new double[n + 1][];
 						for (int j = 0; j < n; j++)
 						{
@@ -280,6 +357,7 @@ namespace RecurrentNeuronet2
 			
 			DirectPass();
 			int iterations = 0;
+			bool badCase = false;
 			while (I > epsilon)
 			{
 				double I_old = I;
@@ -298,13 +376,14 @@ namespace RecurrentNeuronet2
 				double[] b_old = (double[])b.Clone();
 
 				BackwardPass();
-				WeightsChange();
+				WeightsChange(badCase);
 
 				isLearnedInThisCicle = true;
 
 				DirectPass();
 				if (I >= I_old)
 				{
+					badCase = true;
 					alpha /= 2;
 					if (alpha == 0)
 						throw new Exception("Нейросеть не может обучиться на таких данных");
