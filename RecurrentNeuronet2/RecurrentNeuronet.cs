@@ -45,7 +45,7 @@ namespace RecurrentNeuronet2
 		{
 			//// tanh
 			//return Math.Tanh(state);
-			return 1 / (1 + Math.Exp(-0.0001*state));
+			return 1 / (1 + Math.Exp(-0.1*state));
 		}
 
 		// f1 = f' - производная f
@@ -53,7 +53,7 @@ namespace RecurrentNeuronet2
 		{
 			//// 1/(cosh)^2
 			//return 1 / Math.Pow(Math.Cosh(state), 2);
-			return 0.0001*Math.Exp(-0.0001*state) / Math.Pow(1 + Math.Exp(-0.0001*state), 2);
+			return 0.1*Math.Exp(-0.1*state) / Math.Pow(1 + Math.Exp(-0.1*state), 2);
 		}
 
 		// g - функция активации выходного слоя
@@ -282,7 +282,6 @@ namespace RecurrentNeuronet2
 			int iterations = 0;
 			while (I > epsilon)
 			{
-				iterations++;
 				double I_old = I;
 				// сохраняем старые веса
 				double[][] W_old = new double[m][];
@@ -306,7 +305,6 @@ namespace RecurrentNeuronet2
 				DirectPass();
 				if (I >= I_old)
 				{
-					iterations--;
 					alpha /= 2;
 					if (alpha == 0)
 						throw new Exception("Нейросеть не может обучиться на таких данных");
@@ -317,6 +315,8 @@ namespace RecurrentNeuronet2
 					b = b_old;
 					DirectPass();
 				}
+				else
+					iterations++;
 			}
 			return iterations;
 		}

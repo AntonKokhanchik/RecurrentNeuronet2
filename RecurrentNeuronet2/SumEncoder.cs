@@ -13,6 +13,7 @@ namespace RecurrentNeuronet2
 		public SumEncoder(string[][] text)
 		{
 			dictionary = new Dictionary<string, double>();
+			double max = 0;
 			for (int i = 0; i < text.Length; i++)
 				for (int j = 0; j < text[i].Length; j++)
 					if (!dictionary.ContainsKey(text[i][j]))
@@ -20,8 +21,12 @@ namespace RecurrentNeuronet2
 						int s = 0;
 						for (int k = 0; k < text[i][j].Length; k++)
 							s += (int)text[i][j][k];
+						if (s > max)
+							max = s;
 						dictionary.Add(text[i][j], s);
 					}
+			for (int i=0; i<dictionary.Count; i++)
+				dictionary[dictionary.ElementAt(i).Key] = dictionary.ElementAt(i).Value / max;
 		}
 
 		public double[][][] EncodeText(string[][] text)
