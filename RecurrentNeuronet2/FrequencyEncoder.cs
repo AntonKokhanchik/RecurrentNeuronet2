@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace RecurrentNeuronet2
 {
+	/// <summary>
+	/// Кодировка на основе частот встречаемости слов в тексте
+	/// </summary>
 	class FrequencyEncoder : IEncoder
 	{
 		private Dictionary<string, double> dictionary;

@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace RecurrentNeuronet2
 {
+	/// <summary>
+	/// На выходе кодировщика его вход (должен быть числовым)
+	/// </summary>
 	class EmptyEncoder : IEncoder
 	{
 		private Dictionary<string, double> dictionary;

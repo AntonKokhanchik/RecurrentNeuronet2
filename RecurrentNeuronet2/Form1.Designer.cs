@@ -84,7 +84,7 @@
 			this.textBoxEpsilon.Name = "textBoxEpsilon";
 			this.textBoxEpsilon.Size = new System.Drawing.Size(90, 20);
 			this.textBoxEpsilon.TabIndex = 2;
-			this.textBoxEpsilon.Text = "1E-04";
+			this.textBoxEpsilon.Text = "0,1";
 			// 
 			// textBoxInnerLength
 			// 
@@ -185,7 +185,7 @@
 			this.textBoxAlpha.Name = "textBoxAlpha";
 			this.textBoxAlpha.Size = new System.Drawing.Size(90, 20);
 			this.textBoxAlpha.TabIndex = 2;
-			this.textBoxAlpha.Text = "3";
+			this.textBoxAlpha.Text = "30";
 			// 
 			// buttonExitFile
 			// 
