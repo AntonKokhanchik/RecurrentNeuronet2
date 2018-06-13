@@ -43,21 +43,18 @@ namespace RecurrentNeuronet2
 		public StringBuilder info;
 
 		// Функции
-
+		private double kf = 0.1;
 		// f - функция активации скрытого слоя
 		private double f(double state)
 		{
-			//// tanh
-			//return Math.Tanh(state);
-			return 1 / (1 + Math.Exp(-0.1*state));
+			// 1/(1-e^(-kf*x))
+			return 1 / (1 + Math.Exp(-kf*state));
 		}
 
 		// f1 = f' - производная f
 		private double f1(double state)
 		{
-			//// 1/(cosh)^2
-			//return 1 / Math.Pow(Math.Cosh(state), 2);
-			return 0.1*Math.Exp(-0.1*state) / Math.Pow(1 + Math.Exp(-0.1*state), 2);
+			return kf*Math.Exp(-kf*state) / Math.Pow(1 + Math.Exp(-kf*state), 2);
 		}
 
 		// g - функция активации выходного слоя
@@ -70,7 +67,6 @@ namespace RecurrentNeuronet2
 		// g1 = g' - производная g
 		private double g1(double state)
 		{
-			// 1/(cosh)^2
 			return Math.Exp(-state) / Math.Pow(1 + Math.Exp(-state),2);
 		}
 
