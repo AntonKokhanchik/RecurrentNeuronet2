@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace RecurrentNeuronet2
 {
+	/// <summary>
+	/// Кодирует слова текста посредством сложения кодов букв, входящих в слово
+	/// </summary>
 	class SumEncoder : IEncoder
 	{
 		private Dictionary<string, double> dictionary;

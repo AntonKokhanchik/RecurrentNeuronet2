@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace RecurrentNeuronet2
 {
+	/// <summary>
+	/// Интерфейс кодировки входного текста
+	/// </summary>
 	interface IEncoder
 	{
 		double[][][] EncodeText(string[][] text);
