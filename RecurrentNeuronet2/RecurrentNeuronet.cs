@@ -32,6 +32,7 @@ namespace RecurrentNeuronet2
 		private double[/*m*/] q;
 		private double[/*n+1*/][/*r*/] p; // множители Лагранжа
 
+		double st;
 		private double alpha_U; // скорость обучения
 		private double alpha_W;
 		private double alpha_V;
@@ -43,18 +44,18 @@ namespace RecurrentNeuronet2
 		public StringBuilder info;
 
 		// Функции
-		private double kf = 0.1;
+		private double kf = 1;
 		// f - функция активации скрытого слоя
 		private double f(double state)
 		{
 			// 1/(1-e^(-kf*x))
-			return 1 / (1 + Math.Exp(-kf*state));
+			return 1 / (1 + Math.Exp(-kf * state));
 		}
 
 		// f1 = f' - производная f
 		private double f1(double state)
 		{
-			return kf*Math.Exp(-kf*state) / Math.Pow(1 + Math.Exp(-kf*state), 2);
+			return kf * Math.Exp(-kf * state) / Math.Pow(1 + Math.Exp(-kf * state), 2);
 		}
 
 		// g - функция активации выходного слоя
@@ -67,7 +68,7 @@ namespace RecurrentNeuronet2
 		// g1 = g' - производная g
 		private double g1(double state)
 		{
-			return Math.Exp(-state) / Math.Pow(1 + Math.Exp(-state),2);
+			return Math.Exp(-state) / Math.Pow(1 + Math.Exp(-state), 2);
 		}
 
 
@@ -145,8 +146,6 @@ namespace RecurrentNeuronet2
 		// 3. Вычисляем изменение весов:
 		private void Change_U(bool badCase)
 		{
-			if (alpha_U == 0)
-				return;
 			if (badCase)
 			{
 				alpha_U /= 2;
@@ -168,7 +167,10 @@ namespace RecurrentNeuronet2
 						if (max < U[l][k])
 							max = U[l][k];
 					}
-				alpha_U = 0.1 * max / dmax;
+				if (dmax == 0 || max == 0)
+					alpha_U = st;
+				else
+					alpha_U = 0.1 * max / dmax;
 			}
 
 			for (int l = 0; l < r; l++)
@@ -183,8 +185,6 @@ namespace RecurrentNeuronet2
 
 		private void Change_V(bool badCase)
 		{
-			if (alpha_V == 0)
-				return;
 			if (badCase)
 			{
 				alpha_V /= 2;
@@ -206,7 +206,10 @@ namespace RecurrentNeuronet2
 						if (max < V[l][k])
 							max = V[l][k];
 					}
-				alpha_V = 0.1 * max / dmax;
+				if (dmax == 0 || max == 0)
+					alpha_V = st;
+				else
+					alpha_V = 0.1 * max / dmax;
 			}
 
 			for (int l = 0; l < r; l++)
@@ -221,8 +224,6 @@ namespace RecurrentNeuronet2
 
 		private void Change_W(bool badCase)
 		{
-			if (alpha_W == 0)
-				return;
 			if (badCase)
 			{
 				alpha_W /= 2;
@@ -242,7 +243,10 @@ namespace RecurrentNeuronet2
 						if (max < W[l][k])
 							max = W[l][k];
 					}
-				alpha_W = 0.1 * max / dmax;
+				if (dmax == 0 || max == 0)
+					alpha_W = st;
+				else
+					alpha_W = 0.1 * max / dmax;
 			}
 
 			for (int l = 0; l < m; l++)
@@ -252,8 +256,6 @@ namespace RecurrentNeuronet2
 
 		private void Change_a(bool badCase)
 		{
-			if (alpha_a == 0)
-				return;
 			if (badCase)
 			{
 				alpha_a /= 2;
@@ -274,7 +276,10 @@ namespace RecurrentNeuronet2
 					if (max < a[l])
 						max = a[l];
 				}
-				alpha_a = 0.1 * max / dmax;
+				if (dmax == 0 || max == 0)
+					alpha_a = st;
+				else
+					alpha_a = 0.1 * max / dmax;
 			}
 
 			for (int l = 0; l < r; l++)
@@ -288,8 +293,6 @@ namespace RecurrentNeuronet2
 
 		private void Change_b(bool badCase)
 		{
-			if (alpha_b == 0)
-				return;
 			if (badCase)
 			{
 				alpha_b /= 2;
@@ -308,7 +311,10 @@ namespace RecurrentNeuronet2
 					if (max < b[l])
 						max = b[l];
 				}
-				alpha_b = 0.1 * max / dmax;
+				if (dmax == 0 || max == 0)
+					alpha_b = st;
+				else
+					alpha_b = 0.1 * max / dmax;
 			}
 
 			for (int l = 0; l < m; l++)
@@ -337,7 +343,7 @@ namespace RecurrentNeuronet2
 			{
 				V[i] = new double[s];
 				for (int j = 0; j < s; j++)
-					V[i][j] = i+j;
+					V[i][j] = 1;
 			}
 
 			U = new double[r][];
@@ -345,7 +351,7 @@ namespace RecurrentNeuronet2
 			{
 				U[i] = new double[r];
 				for (int j = 0; j < r; j++)
-					U[i][j] = i-j;
+					U[i][j] = 1;
 			}
 
 			W = new double[m][];
@@ -353,16 +359,16 @@ namespace RecurrentNeuronet2
 			{
 				W[i] = new double[r];
 				for (int j = 0; j < r; j++)
-					W[i][j] = -i-j;
+					W[i][j] = 1;
 			}
 
 			a = new double[r];
 			for (int j = 0; j < r; j++)
-				a[j] = j+3;
+				a[j] = 1;
 
 			b = new double[m];
 			for (int i = 0; i < m; i++)
-				b[i] = i-8;
+				b[i] = 1;
 
 
 			bool isLearnedInThisCicle;
@@ -371,7 +377,7 @@ namespace RecurrentNeuronet2
 				isLearnedInThisCicle = false;
 				for (int i = 0; i < m; i++)
 				{
-					alpha_W = alpha_V = alpha_U = alpha_a = alpha_b = step;
+					alpha_W = alpha_V = alpha_U = alpha_a = alpha_b = st = step;
 					x = new double[n + 1][];
 					for (int j = 0; j < n; j++)
 					{
@@ -410,6 +416,7 @@ namespace RecurrentNeuronet2
 			int iterations = 0;
 			while (I > epsilon && stopwatch.Elapsed.Minutes < learnTime)
 			{
+				double I_old = I;
 				Learn_W();
 				Learn_V();
 				Learn_U();
@@ -419,15 +426,15 @@ namespace RecurrentNeuronet2
 				isLearnedInThisCicle = true;
 
 				iterations++;
+
+				if (I_old - I < 1E-15)
+					throw new Exception("too slow");
 			}
 			return iterations;
 		}
 
 		private void Learn_U()
 		{
-			if (alpha_U == 0)
-				return;
-
 			double I_old = I;
 			double[][] U_old = new double[r][];
 			for (int j = 0; j < r; j++)
@@ -439,7 +446,9 @@ namespace RecurrentNeuronet2
 
 			while (I > I_old)
 			{
-				U = U_old;
+				U = new double[r][];
+				for (int j = 0; j < r; j++)
+					U[j] = (double[])U_old[j].Clone();
 				DirectPass();
 				I_old = I;
 				if (alpha_U == 0)
@@ -452,9 +461,6 @@ namespace RecurrentNeuronet2
 
 		private void Learn_V()
 		{
-			if (alpha_V == 0)
-				return;
-
 			double I_old = I;
 			double[][] V_old = new double[r][];
 			for (int j = 0; j < r; j++)
@@ -466,7 +472,9 @@ namespace RecurrentNeuronet2
 
 			while (I > I_old)
 			{
-				V = V_old;
+				V = new double[r][];
+				for (int j = 0; j < r; j++)
+					V[j] = (double[])V_old[j].Clone();
 				DirectPass();
 				I_old = I;
 				if (alpha_V == 0)
@@ -479,9 +487,6 @@ namespace RecurrentNeuronet2
 
 		private void Learn_W()
 		{
-			if (alpha_W == 0)
-				return;
-
 			double I_old = I;
 			double[][] W_old = new double[m][];
 			for (int j = 0; j < m; j++)
@@ -493,7 +498,9 @@ namespace RecurrentNeuronet2
 			
 			while (I > I_old)
 			{
-				W = W_old;
+				W = new double[m][];
+				for (int j = 0; j < m; j++)
+					W[j] = (double[])W_old[j].Clone();
 				DirectPass();
 				I_old = I;
 				if (alpha_W == 0)
@@ -506,9 +513,6 @@ namespace RecurrentNeuronet2
 
 		private void Learn_a()
 		{
-			if (alpha_a == 0)
-				return;
-
 			double I_old = I;
 			double[] a_old = (double[])a.Clone();
 
@@ -518,7 +522,7 @@ namespace RecurrentNeuronet2
 
 			while (I > I_old)
 			{
-				a = a_old;
+				double[] a = (double[])a_old.Clone();
 				DirectPass();
 				I_old = I;
 				if (alpha_a == 0)
@@ -531,9 +535,6 @@ namespace RecurrentNeuronet2
 
 		private void Learn_b()
 		{
-			if (alpha_b == 0)
-				return;
-
 			double I_old = I;
 			double[] b_old = (double[])b.Clone();
 
@@ -543,7 +544,7 @@ namespace RecurrentNeuronet2
 
 			while (I > I_old)
 			{
-				b = b_old;
+				double[] b = (double[])b_old.Clone();
 				DirectPass();
 				I_old = I;
 				if (alpha_b == 0)
