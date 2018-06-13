@@ -143,22 +143,35 @@ namespace RecurrentNeuronet2
 		}
 
 		// 3. Вычисляем изменение весов:
-		private void WeightsChange(bool badCase)
+		private void Change_U(bool badCase)
 		{
-			if (!badCase)
-				CalculateAlpha();
-			for (int l = 0; l < m; l++)
+			if (alpha_U == 0)
+				return;
+			if (badCase)
 			{
-				// dW
-				for (int k = 0; k < r; k++)
-					W[l][k] -= alpha_W * q[l] * g1(finalState[l]) * h[n][k];
-				// db
-				b[l] -= alpha_b * q[l] * g1(finalState[l]);
+				alpha_U /= 2;
+				if (alpha_U == 0)
+					return;
+			}
+			else
+			{
+				double dmax = 0;
+				double max = 0;
+				for (int l = 0; l < r; l++)
+					for (int k = 0; k < r; k++)
+					{
+						double tmp = 0;
+						for (int t = 0; t < n; t++)
+							tmp += p[t + 1][l] * f1(state[t + 1][l]) * h[t][k];
+						if (dmax < tmp)
+							dmax = tmp;
+						if (max < U[l][k])
+							max = U[l][k];
+					}
+				alpha_U = 0.1 * max / dmax;
 			}
 
 			for (int l = 0; l < r; l++)
-			{
-				// dU
 				for (int k = 0; k < r; k++)
 				{
 					double Spf1h = 0;
@@ -166,17 +179,106 @@ namespace RecurrentNeuronet2
 						Spf1h += p[t + 1][l] * f1(state[t + 1][l]) * h[t][k];
 					U[l][k] -= alpha_U * Spf1h;
 				}
+		}
 
-				// dV
+		private void Change_V(bool badCase)
+		{
+			if (alpha_V == 0)
+				return;
+			if (badCase)
+			{
+				alpha_V /= 2;
+				if (alpha_V == 0)
+					return;
+			}
+			else
+			{
+				double dmax = 0;
+				double max = 0;
+				for (int l = 0; l < r; l++)
+					for (int k = 0; k < s; k++)
+					{
+						double tmp = 0;
+						for (int t = 0; t < n; t++)
+							tmp += p[t + 1][l] * f1(state[t + 1][l]) * x[t + 1][k];
+						if (dmax < tmp)
+							dmax = tmp;
+						if (max < V[l][k])
+							max = V[l][k];
+					}
+				alpha_V = 0.1 * max / dmax;
+			}
+
+			for (int l = 0; l < r; l++)
 				for (int k = 0; k < s; k++)
 				{
 					double Spf1x = 0;
 					for (int t = 0; t < n; t++)
-						Spf1x += p[t + 1][l] * f1(state[t + 1][l]) * x[t+1][k];
+						Spf1x += p[t + 1][l] * f1(state[t + 1][l]) * x[t + 1][k];
 					V[l][k] -= alpha_V * Spf1x;
 				}
+		}
 
-				// da
+		private void Change_W(bool badCase)
+		{
+			if (alpha_W == 0)
+				return;
+			if (badCase)
+			{
+				alpha_W /= 2;
+				if (alpha_W == 0)
+					return;
+			}
+			else
+			{
+				double dmax = 0;
+				double max = 0;
+				for (int l = 0; l < W.Length; l++)
+					for (int k = 0; k < W[l].Length; k++)
+					{
+						double tmp = q[l] * g1(finalState[l]) * h[n][k];
+						if (dmax < tmp)
+							dmax = tmp;
+						if (max < W[l][k])
+							max = W[l][k];
+					}
+				alpha_W = 0.1 * max / dmax;
+			}
+
+			for (int l = 0; l < m; l++)
+				for (int k = 0; k < r; k++)
+					W[l][k] -= alpha_W * q[l] * g1(finalState[l]) * h[n][k];
+		}
+
+		private void Change_a(bool badCase)
+		{
+			if (alpha_a == 0)
+				return;
+			if (badCase)
+			{
+				alpha_a /= 2;
+				if (alpha_a == 0)
+					return;
+			}
+			else
+			{
+				double dmax = 0;
+				double max = 0;
+				for (int l = 0; l < r; l++)
+				{
+					double tmp = 0;
+					for (int t = 0; t < n; t++)
+						tmp += p[t + 1][l] * f1(state[t + 1][l]);
+					if (dmax < tmp)
+						dmax = tmp;
+					if (max < a[l])
+						max = a[l];
+				}
+				alpha_a = 0.1 * max / dmax;
+			}
+
+			for (int l = 0; l < r; l++)
+			{
 				double Spf1 = 0;
 				for (int t = 0; t < n; t++)
 					Spf1 += p[t + 1][l] * f1(state[t + 1][l]);
@@ -184,77 +286,33 @@ namespace RecurrentNeuronet2
 			}
 		}
 
-		private void CalculateAlpha()
+		private void Change_b(bool badCase)
 		{
-			double dmax = 0;
-			double max = 0;
-			//W
-			for (int l = 0; l < W.Length; l++)
-				for (int k = 0; k < W[l].Length; k++)
-				{
-					double tmp = q[l] * g1(finalState[l]) * h[n][k];
-					if (dmax < tmp)
-						dmax = tmp;
-					if (max < W[l][k])
-						max = W[l][k];
-				}
-			alpha_W = 0.1 * max / dmax;
-			dmax = 0;
-			max = 0;
-			//U
-			for (int l = 0; l < r; l++)
-				for (int k = 0; k < r; k++)
-				{
-					double tmp = 0;
-					for (int t = 0; t < n; t++)
-						tmp += p[t + 1][l] * f1(state[t + 1][l]) * h[t][k];
-					if (dmax < tmp)
-						dmax = tmp;
-					if (max < U[l][k])
-						max = U[l][k];
-				}
-			alpha_U = 0.1 * max / dmax;
-			dmax = 0;
-			max = 0;
-			//V
-			for (int l = 0; l < r; l++)
-				for (int k = 0; k < s; k++)
-				{
-					double tmp = 0;
-					for (int t = 0; t < n; t++)
-						tmp += p[t + 1][l] * f1(state[t + 1][l]) * x[t + 1][k];
-					if (dmax < tmp)
-						dmax = tmp;
-					if (max < V[l][k])
-						max = V[l][k];
-				}
-			alpha_V = 0.1 * max / dmax;
-			dmax = 0;
-			max = 0;
-			//a
-			for (int l = 0; l < r; l++)
+			if (alpha_b == 0)
+				return;
+			if (badCase)
 			{
-				double tmp = 0;
-				for (int t = 0; t < n; t++)
-					tmp += p[t + 1][l] * f1(state[t + 1][l]);
-				if (dmax < tmp)
-					dmax = tmp;
-				if (max < a[l])
-					max = a[l];
+				alpha_b /= 2;
+				if (alpha_b == 0)
+					return;
 			}
-			alpha_a = 0.1 * max / dmax;
-			dmax = 0;
-			max = 0;
-			//b
+			else
+			{
+				double dmax = 0;
+				double max = 0;
+				for (int l = 0; l < m; l++)
+				{
+					double tmp = q[l] * g1(finalState[l]);
+					if (dmax < tmp)
+						dmax = tmp;
+					if (max < b[l])
+						max = b[l];
+				}
+				alpha_b = 0.1 * max / dmax;
+			}
+
 			for (int l = 0; l < m; l++)
-			{
-				double tmp = q[l] * g1(finalState[l]);
-				if (dmax < tmp)
-					dmax = tmp;
-				if (max < b[l])
-					max = b[l];
-			}
-			alpha_b = 0.1 * max / dmax;
+				b[l] -= alpha_b * q[l] * g1(finalState[l]);
 		}
 
 		// Обратная связь
@@ -311,89 +369,189 @@ namespace RecurrentNeuronet2
 			do
 			{
 				isLearnedInThisCicle = false;
-				//for (int l = 0; l < m; l++)
-				//{
-					for (int i = 0; i < m; i++)
+				for (int i = 0; i < m; i++)
+				{
+					alpha_W = alpha_V = alpha_U = alpha_a = alpha_b = step;
+					x = new double[n + 1][];
+					for (int j = 0; j < n; j++)
 					{
-						alpha  = step;
-						x = new double[n + 1][];
-						for (int j = 0; j < n; j++)
-						{
-							x[j + 1] = new double[s];
-							if (j < enters[i].Length)
-								for (int k = 0; k < enters[i][j].Length; k++)
-									x[j + 1][k] = enters[i][j][k];
-						}
-
-						y = new double[m];
-						d = new double[m];
-						d[i] = 1;
-
-						h = new double[n + 1][];
-						state = new double[n + 1][];
-						finalState = new double[m];
-						for (int j = 0; j <= n; j++)
-						{
-							h[j] = new double[r];
-							state[j] = new double[r];
-						}
-
-						int iterations = Learn(ref isLearnedInThisCicle);
-						//info.AppendFormat("from 0 to {0} ({1}): {2} iterations", l, i, iterations).AppendLine();
-						info.AppendFormat("string {0}: {1} iterations", i, iterations).AppendLine();
+						x[j + 1] = new double[s];
+						if (j < enters[i].Length)
+							for (int k = 0; k < enters[i][j].Length; k++)
+								x[j + 1][k] = enters[i][j][k];
 					}
+
+					y = new double[m];
+					d = new double[m];
+					d[i] = 1;
+
+					h = new double[n + 1][];
+					state = new double[n + 1][];
+					finalState = new double[m];
+					for (int j = 0; j <= n; j++)
+					{
+						h[j] = new double[r];
+						state[j] = new double[r];
+					}
+
+					int iterations = Learn(ref isLearnedInThisCicle, stopwatch, learnTime);
+					info.AppendFormat("string {0}: {1} iterations, time: {2}:{3}:{4}", i, iterations, 
+						stopwatch.Elapsed.Hours, stopwatch.Elapsed.Minutes, stopwatch.Elapsed.Seconds).AppendLine();
+
 					if (stopwatch.Elapsed.Minutes > learnTime)
 						break;
-				//}
+				}
 			} while (isLearnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime);
 		}
 
-		private int Learn(ref bool isLearnedInThisCicle)
+		private int Learn(ref bool isLearnedInThisCicle, Stopwatch stopwatch, int learnTime)
 		{
-			
 			DirectPass();
 			int iterations = 0;
-			bool badCase = false;
-			while (I > epsilon)
+			while (I > epsilon && stopwatch.Elapsed.Minutes < learnTime)
 			{
-				double I_old = I;
-				// сохраняем старые веса
-				double[][] W_old = new double[m][];
-				for (int j = 0; j < m; j++)
-					W_old[j] = (double[])W[j].Clone();
-				double[][] U_old = new double[r][];
-				double[][] V_old = new double[r][];
-				for (int j = 0; j < r; j++)
-				{
-					U_old[j] = (double[])U[j].Clone();
-					V_old[j] = (double[])V[j].Clone();
-				}
-				double[] a_old = (double[])a.Clone();
-				double[] b_old = (double[])b.Clone();
-
-				BackwardPass();
-				WeightsChange(badCase);
+				Learn_W();
+				Learn_V();
+				Learn_U();
+				Learn_a();
+				Learn_b();
 
 				isLearnedInThisCicle = true;
 
-				DirectPass();
-				if (I >= I_old)
-				{
-					badCase = true;
-					alpha /= 2;
-					if (alpha == 0)
-						throw new Exception("Нейросеть не может обучиться на таких данных");
-					W = W_old;
-					U = U_old;
-					V = V_old;
-					a = a_old;
-					b = b_old;
-					DirectPass();
-				}
-				else
-					iterations++;
+				iterations++;
 			}
 			return iterations;
+		}
+
+		private void Learn_U()
+		{
+			if (alpha_U == 0)
+				return;
+
+			double I_old = I;
+			double[][] U_old = new double[r][];
+			for (int j = 0; j < r; j++)
+				U_old[j] = (double[])U[j].Clone();
+
+			BackwardPass();
+			Change_U(false);
+			DirectPass();
+
+			while (I > I_old)
+			{
+				U = U_old;
+				DirectPass();
+				I_old = I;
+				if (alpha_U == 0)
+					break;
+				BackwardPass();
+				Change_U(true);
+				DirectPass();
+			}
+		}
+
+		private void Learn_V()
+		{
+			if (alpha_V == 0)
+				return;
+
+			double I_old = I;
+			double[][] V_old = new double[r][];
+			for (int j = 0; j < r; j++)
+				V_old[j] = (double[])V[j].Clone();
+
+			BackwardPass();
+			Change_V(false);
+			DirectPass();
+
+			while (I > I_old)
+			{
+				V = V_old;
+				DirectPass();
+				I_old = I;
+				if (alpha_V == 0)
+					break;
+				BackwardPass();
+				Change_V(true);
+				DirectPass();
+			}
+		}
+
+		private void Learn_W()
+		{
+			if (alpha_W == 0)
+				return;
+
+			double I_old = I;
+			double[][] W_old = new double[m][];
+			for (int j = 0; j < m; j++)
+				W_old[j] = (double[])W[j].Clone();
+			
+			BackwardPass();
+			Change_W(false);
+			DirectPass();
+			
+			while (I > I_old)
+			{
+				W = W_old;
+				DirectPass();
+				I_old = I;
+				if (alpha_W == 0)
+					break;
+				BackwardPass();
+				Change_W(true);
+				DirectPass();
+			}
+		}
+
+		private void Learn_a()
+		{
+			if (alpha_a == 0)
+				return;
+
+			double I_old = I;
+			double[] a_old = (double[])a.Clone();
+
+			BackwardPass();
+			Change_a(false);
+			DirectPass();
+
+			while (I > I_old)
+			{
+				a = a_old;
+				DirectPass();
+				I_old = I;
+				if (alpha_a == 0)
+					break;
+				BackwardPass();
+				Change_a(true);
+				DirectPass();
+			}
+		}
+
+		private void Learn_b()
+		{
+			if (alpha_b == 0)
+				return;
+
+			double I_old = I;
+			double[] b_old = (double[])b.Clone();
+
+			BackwardPass();
+			Change_b(false);
+			DirectPass();
+
+			while (I > I_old)
+			{
+				b = b_old;
+				DirectPass();
+				I_old = I;
+				if (alpha_b == 0)
+					break;
+				BackwardPass();
+				Change_b(true);
+				DirectPass();
+			}
 		}
 
 		public double[] Answer(double[][] enter)
