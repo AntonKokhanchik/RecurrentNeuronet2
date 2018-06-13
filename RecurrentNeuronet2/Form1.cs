@@ -24,7 +24,7 @@ namespace RecurrentNeuronet2
 
         private void buttonSelectFile_Click(object sender, EventArgs e)
         {
-            openFileDialog1.ShowDialog();
+            openFileDialogInput.ShowDialog();
         }
 
         private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
@@ -46,7 +46,7 @@ namespace RecurrentNeuronet2
         private string[][] getWords()
         {
             List<string[]> text = new List<string[]>();
-			using (StreamReader file = new StreamReader(openFileDialog1.OpenFile(), Encoding.UTF8))
+			using (StreamReader file = new StreamReader(openFileDialogInput.OpenFile(), Encoding.UTF8))
 			{
 				string s = file.ReadLine();
 				while (s != null)
@@ -72,12 +72,12 @@ namespace RecurrentNeuronet2
 
 		private void buttonExitFile_Click(object sender, EventArgs e)
 		{
-			saveFileDialog1.ShowDialog();
+			saveFileDialogResults.ShowDialog();
 		}
 
 		private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
 		{
-			using (StreamWriter sw = new StreamWriter(saveFileDialog1.OpenFile()))
+			using (StreamWriter sw = new StreamWriter(saveFileDialogResults.OpenFile()))
 			{
 				double[][] answers = new double[encodedText.Length][];
 				StringBuilder sb = new StringBuilder("\t");
@@ -105,14 +105,40 @@ namespace RecurrentNeuronet2
 
 		private void buttonSaveDebug_Click(object sender, EventArgs e)
 		{
-			saveFileDialog2.ShowDialog();
+			saveFileDialogLog.ShowDialog();
 		}
 
 		private void saveFileDialog2_FileOk(object sender, CancelEventArgs e)
 		{
-			using (StreamWriter sw = new StreamWriter(saveFileDialog2.OpenFile()))
+			using (StreamWriter sw = new StreamWriter(saveFileDialogLog.OpenFile()))
 			{
 				sw.Write(neuronet.info.ToString());
+			}
+		}
+
+		private void buttonSaveNet_Click(object sender, EventArgs e)
+		{
+			saveFileDialogNet.ShowDialog();
+		}
+
+		private void saveFileDialogNet_FileOk(object sender, CancelEventArgs e)
+		{
+			using (StreamWriter sw = new StreamWriter(saveFileDialogNet.OpenFile()))
+			{
+				neuronet.WriteWeights(sw);
+			}
+		}
+
+		private void buttonLoadNet_Click(object sender, EventArgs e)
+		{
+			openFileDialogLoadNet.ShowDialog();
+		}
+
+		private void openFileDialogLoadNet_FileOk(object sender, CancelEventArgs e)
+		{
+			using (StreamReader sr = new StreamReader(openFileDialogLoadNet.OpenFile(), Encoding.UTF8))
+			{
+				neuronet = new RecurrentNeuronet(sr);
 			}
 		}
 	}

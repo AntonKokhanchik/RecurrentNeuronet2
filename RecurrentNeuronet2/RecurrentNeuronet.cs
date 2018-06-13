@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -327,6 +328,126 @@ namespace RecurrentNeuronet2
 					x[j + 1] = new double[enter[0].Length];
 			DirectPass();
 			return y;
+		}
+
+
+		public void WriteWeights(StreamWriter sw)
+		{
+			StringBuilder sb = new StringBuilder("");
+			sb.AppendLine("n r s m").AppendFormat("{0} {1} {2} {3}", n, r, s, m).AppendLine();
+			sb.AppendLine("U");
+			for (int i = 0; i < U.Length; i++)
+			{
+				for (int j = 0; j < U[0].Length; j++)
+					sb.AppendFormat("{0} ", U[i][j]);
+				sb.AppendLine();
+			}
+			sb.AppendLine("V");
+			for (int i = 0; i < V.Length; i++)
+			{
+				for (int j = 0; j < V[0].Length; j++)
+					sb.AppendFormat("{0} ", V[i][j]);
+				sb.AppendLine();
+			}
+			sb.AppendLine("W");
+			for (int i = 0; i < W.Length; i++)
+			{
+				for (int j = 0; j < W[0].Length; j++)
+					sb.AppendFormat("{0} ", W[i][j]);
+				sb.AppendLine();
+			}
+			sb.AppendLine("a");
+			for (int i = 0; i < a.Length; i++)
+				sb.AppendFormat("{0} ", a[i]);
+			sb.AppendLine();
+			
+			sb.AppendLine("b");
+			for (int i = 0; i < b.Length; i++)
+				sb.AppendFormat("{0} ", b[i]);
+			sb.AppendLine();
+
+			sw.Write(sb.ToString());
+		}
+
+		public RecurrentNeuronet(StreamReader sr)
+		{
+			string tmp = sr.ReadLine();
+			if (tmp != "n r s m")
+				throw new Exception("error");
+			tmp = sr.ReadLine();
+			string[] arr = tmp.Split(' ');
+			n = int.Parse(arr[0]);
+			r = int.Parse(arr[1]);
+			s = int.Parse(arr[2]);
+			m = int.Parse(arr[3]);
+
+			tmp = sr.ReadLine();
+			if (tmp != "U")
+				throw new Exception("error");
+			U = new double[r][];
+			for (int i = 0; i < r; i++)
+			{
+				U[i] = new double[r];
+				tmp = sr.ReadLine();
+				arr = tmp.Split(' ');
+				for (int j = 0; j < r; j++)
+					U[i][j] = double.Parse(arr[j]);
+			}
+
+			tmp = sr.ReadLine();
+			if (tmp != "V")
+				throw new Exception("error");
+			V = new double[r][];
+			for (int i = 0; i < r; i++)
+			{
+				V[i] = new double[s];
+				tmp = sr.ReadLine();
+				arr = tmp.Split(' ');
+				for (int j = 0; j < s; j++)
+					V[i][j] = double.Parse(arr[j]);
+			}
+
+			tmp = sr.ReadLine();
+			if (tmp != "W")
+				throw new Exception("error");
+			W = new double[m][];
+			for (int i = 0; i < m; i++)
+			{
+				W[i] = new double[r];
+				tmp = sr.ReadLine();
+				arr = tmp.Split(' ');
+				for (int j = 0; j < r; j++)
+					W[i][j] = double.Parse(arr[j]);
+			}
+
+			tmp = sr.ReadLine();
+			if (tmp != "a")
+				throw new Exception("error");
+			a = new double[r];
+			tmp = sr.ReadLine();
+			arr = tmp.Split(' ');
+			for (int i = 0; i < r; i++)
+				a[i] = double.Parse(arr[i]);
+
+			tmp = sr.ReadLine();
+			if (tmp != "b")
+				throw new Exception("error");
+			b = new double[m];
+			tmp = sr.ReadLine();
+			arr = tmp.Split(' ');
+			for (int i = 0; i < m; i++)
+				b[i] = double.Parse(arr[i]);
+
+			h = new double[n + 1][];
+			state = new double[n + 1][];
+			for (int j = 0; j <= n; j++)
+			{
+				h[j] = new double[r];
+				state[j] = new double[r];
+			}
+			finalState = new double[m];
+			y = new double[m];
+			d = new double[m];
 		}
 
 
