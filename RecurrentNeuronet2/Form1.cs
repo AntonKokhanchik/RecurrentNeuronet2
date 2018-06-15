@@ -114,7 +114,7 @@ namespace RecurrentNeuronet2
 		{
 			using (StreamWriter sw = new StreamWriter(saveFileDialogLog.OpenFile()))
 			{
-				sw.Write(neuronet.info.ToString());
+				sw.Write(neuronet.log.ToString());
 			}
 		}
 
