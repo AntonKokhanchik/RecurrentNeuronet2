@@ -60,9 +60,10 @@ namespace RecurrentNeuronet2
 
 		private void buttonLearn_Click(object sender, EventArgs e)
 		{
-			neuronet = new RecurrentNeuronet(encodedText, 
-				Int32.Parse(textBoxInnerLength.Value.ToString()), double.Parse(textBoxEpsilon.Text), 
-				double.Parse(textBoxAlpha.Text), int.Parse(textBoxTime.Text));
+			neuronet = new RecurrentNeuronet(MaxInnerLength(encodedText), Int32.Parse(textBoxInnerLength.Value.ToString()), 
+				encodedText[0][0].Length, encodedText.Length, double.Parse(textBoxEpsilon.Text), double.Parse(textBoxAlpha.Text));
+
+			neuronet.Learn(encodedText, int.Parse(textBoxTime.Text));
 
 			buttonContinueLearn.Enabled = true;
 		}
@@ -148,8 +149,17 @@ namespace RecurrentNeuronet2
 
 		private void buttonContinueLearn_Click(object sender, EventArgs e)
 		{
-			neuronet.ContinueLearning(encodedText, Int32.Parse(textBoxInnerLength.Value.ToString()),
-				double.Parse(textBoxEpsilon.Text), double.Parse(textBoxAlpha.Text), int.Parse(textBoxTime.Text));
+			neuronet.Learn(encodedText, int.Parse(textBoxTime.Text));
+		}
+
+
+		private int MaxInnerLength(double[][][] a)
+		{
+			int max = a[0].Length;
+			for (int i = 1; i < a.Length; i++)
+				if (a[i].Length > max)
+					max = a[i].Length;
+			return max;
 		}
 	}
 }
