@@ -272,7 +272,64 @@ namespace RecurrentNeuronet2
 			} while (isLearnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime);
 		}
 
-		private int Learn(ref bool isLearnedInThisCicle)
+		public void ContinueLearning(double[/*строк*/][/*слов*/][/*размерность слова*/] enters,
+		int innerLength, double accuracy, double step, int learnTime)
+		{
+			Stopwatch stopwatch = new Stopwatch();
+			stopwatch.Start();
+			log = new StringBuilder("");
+			epsilon = accuracy;
+
+			bool learnedInThisCicle;
+			do
+			{
+				learnedInThisCicle = false;
+				for (int i = 0; i < m; i++)
+				{
+					alpha_W = alpha_V = alpha_U = alpha_a = alpha_b = this.step = step;
+					x = new double[n + 1][];
+					for (int j = 0; j < n; j++)
+					{
+						x[j + 1] = new double[s];
+						if (j < enters[i].Length)
+							for (int k = 0; k < enters[i][j].Length; k++)
+								x[j + 1][k] = enters[i][j][k];
+					}
+
+					y = new double[m];
+					d = new double[m];
+					d[i] = 1;
+
+					h = new double[n + 1][];
+					state = new double[n + 1][];
+					finalState = new double[m];
+					for (int j = 0; j <= n; j++)
+					{
+						h[j] = new double[r];
+						state[j] = new double[r];
+					}
+
+					int iterations = Learn(ref learnedInThisCicle, stopwatch, learnTime);
+					log.AppendFormat("string {0}: {1} iterations, I = {2}, time: {3}:{4}:{5}", i, iterations, I,
+						stopwatch.Elapsed.Hours, stopwatch.Elapsed.Minutes, stopwatch.Elapsed.Seconds).AppendLine();
+
+					if (stopwatch.Elapsed.Minutes > learnTime)
+					{
+						log.AppendLine("Time is off, learning stopped");
+						return;
+					}
+					if (tooSlow)
+					{
+						log.AppendLine("Learning is too slow, stopped");
+						return;
+					}
+				}
+			} while ((learnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime && !tooSlow);
+			if (!learnedInThisCicle)
+				log.AppendLine("Learned successeful");
+		}
+
+		private int Learn(ref bool learnedInThisCicle, Stopwatch stopwatch, int learnTime)
 		{
 			
 			DirectPass();

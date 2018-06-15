@@ -63,6 +63,8 @@ namespace RecurrentNeuronet2
 			neuronet = new RecurrentNeuronet(encodedText, 
 				Int32.Parse(textBoxInnerLength.Value.ToString()), double.Parse(textBoxEpsilon.Text), 
 				double.Parse(textBoxAlpha.Text), int.Parse(textBoxTime.Text));
+
+			buttonContinueLearn.Enabled = true;
 		}
 
 		private void buttonAnswer_Click(object sender, EventArgs e)
@@ -140,6 +142,14 @@ namespace RecurrentNeuronet2
 			{
 				neuronet = new RecurrentNeuronet(sr);
 			}
+
+			buttonContinueLearn.Enabled = true;
+		}
+
+		private void buttonContinueLearn_Click(object sender, EventArgs e)
+		{
+			neuronet.ContinueLearning(encodedText, Int32.Parse(textBoxInnerLength.Value.ToString()),
+				double.Parse(textBoxEpsilon.Text), double.Parse(textBoxAlpha.Text), int.Parse(textBoxTime.Text));
 		}
 	}
 }

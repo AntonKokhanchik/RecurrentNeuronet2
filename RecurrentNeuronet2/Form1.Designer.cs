@@ -52,6 +52,7 @@
 			this.buttonSaveNet = new System.Windows.Forms.Button();
 			this.saveFileDialogNet = new System.Windows.Forms.SaveFileDialog();
 			this.openFileDialogLoadNet = new System.Windows.Forms.OpenFileDialog();
+			this.buttonContinueLearn = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.textBoxInnerLength)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -267,6 +268,17 @@
 			this.openFileDialogLoadNet.FileName = "openFileDialog1";
 			this.openFileDialogLoadNet.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialogLoadNet_FileOk);
 			// 
+			// buttonContinueLearn
+			// 
+			this.buttonContinueLearn.Enabled = false;
+			this.buttonContinueLearn.Location = new System.Drawing.Point(227, 141);
+			this.buttonContinueLearn.Name = "buttonContinueLearn";
+			this.buttonContinueLearn.Size = new System.Drawing.Size(139, 22);
+			this.buttonContinueLearn.TabIndex = 1;
+			this.buttonContinueLearn.Text = "Продолжить обучение";
+			this.buttonContinueLearn.UseVisualStyleBackColor = true;
+			this.buttonContinueLearn.Click += new System.EventHandler(this.buttonContinueLearn_Click);
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -286,6 +298,7 @@
 			this.Controls.Add(this.textBoxAlpha);
 			this.Controls.Add(this.textBoxEpsilon);
 			this.Controls.Add(this.buttonAnswer);
+			this.Controls.Add(this.buttonContinueLearn);
 			this.Controls.Add(this.buttonLearn);
 			this.Controls.Add(this.buttonSaveNet);
 			this.Controls.Add(this.buttonLoadNet);
@@ -325,6 +338,7 @@
 		private System.Windows.Forms.Button buttonSaveNet;
 		private System.Windows.Forms.SaveFileDialog saveFileDialogNet;
 		private System.Windows.Forms.OpenFileDialog openFileDialogLoadNet;
+		private System.Windows.Forms.Button buttonContinueLearn;
 	}
 }
 
