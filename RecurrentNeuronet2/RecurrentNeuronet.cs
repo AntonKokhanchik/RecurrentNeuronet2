@@ -33,7 +33,7 @@ namespace RecurrentNeuronet2
 		private double[/*m*/] q;
 		private double[/*n+1*/][/*r*/] p; // множители Лагранжа
 
-		double st;
+		private double step;
 		private double alpha_U; // скорость обучения
 		private double alpha_W;
 		private double alpha_V;
@@ -42,7 +42,9 @@ namespace RecurrentNeuronet2
 		private double epsilon; // точность
 		private double I; // ошибка
 
-		public StringBuilder info;
+		private bool tooSlow = false;
+
+		public StringBuilder log;
 
 		// Функции
 		private double kf = 1;
@@ -169,7 +171,7 @@ namespace RecurrentNeuronet2
 							max = U[l][k];
 					}
 				if (dmax == 0 || max == 0)
-					alpha_U = st;
+					alpha_U = step;
 				else
 					alpha_U = 0.1 * max / dmax;
 			}
@@ -208,7 +210,7 @@ namespace RecurrentNeuronet2
 							max = V[l][k];
 					}
 				if (dmax == 0 || max == 0)
-					alpha_V = st;
+					alpha_V = step;
 				else
 					alpha_V = 0.1 * max / dmax;
 			}
@@ -245,7 +247,7 @@ namespace RecurrentNeuronet2
 							max = W[l][k];
 					}
 				if (dmax == 0 || max == 0)
-					alpha_W = st;
+					alpha_W = step;
 				else
 					alpha_W = 0.1 * max / dmax;
 			}
@@ -278,7 +280,7 @@ namespace RecurrentNeuronet2
 						max = a[l];
 				}
 				if (dmax == 0 || max == 0)
-					alpha_a = st;
+					alpha_a = step;
 				else
 					alpha_a = 0.1 * max / dmax;
 			}
@@ -313,7 +315,7 @@ namespace RecurrentNeuronet2
 						max = b[l];
 				}
 				if (dmax == 0 || max == 0)
-					alpha_b = st;
+					alpha_b = step;
 				else
 					alpha_b = 0.1 * max / dmax;
 			}
@@ -330,7 +332,7 @@ namespace RecurrentNeuronet2
 			// сюда ещё можно исключений набросать, валидаторов
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
-			info = new StringBuilder("");
+			log = new StringBuilder("");
 			
 			n = MaxInnerLength(enters);
 			r = innerLength;
@@ -372,13 +374,13 @@ namespace RecurrentNeuronet2
 				b[i] = 1;
 
 
-			bool isLearnedInThisCicle;
+			bool learnedInThisCicle;
 			do
 			{
-				isLearnedInThisCicle = false;
+				learnedInThisCicle = false;
 				for (int i = 0; i < m; i++)
 				{
-					alpha_W = alpha_V = alpha_U = alpha_a = alpha_b = st = step;
+					alpha_W = alpha_V = alpha_U = alpha_a = alpha_b = this.step = step;
 					x = new double[n + 1][];
 					for (int j = 0; j < n; j++)
 					{
@@ -401,17 +403,27 @@ namespace RecurrentNeuronet2
 						state[j] = new double[r];
 					}
 
-					int iterations = Learn(ref isLearnedInThisCicle, stopwatch, learnTime);
-					info.AppendFormat("string {0}: {1} iterations, time: {2}:{3}:{4}", i, iterations, 
+					int iterations = Learn(ref learnedInThisCicle, stopwatch, learnTime);
+					log.AppendFormat("string {0}: {1} iterations, I = {2}, time: {3}:{4}:{5}", i, iterations, I, 
 						stopwatch.Elapsed.Hours, stopwatch.Elapsed.Minutes, stopwatch.Elapsed.Seconds).AppendLine();
 
-					if (stopwatch.Elapsed.Minutes > learnTime)
+					if (stopwatch.Elapsed.Minutes >= learnTime)
+					{
+						log.AppendLine("Time is off, learning stopped");
 						break;
+					}
+					if (tooSlow)
+					{
+						log.AppendLine("Learning is too slow, stopped");
+						break;
+					}
 				}
-			} while (isLearnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime);
+			} while (learnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime && !tooSlow);
+			if (!learnedInThisCicle)
+				log.AppendLine("Learned successeful");
 		}
 
-		private int Learn(ref bool isLearnedInThisCicle, Stopwatch stopwatch, int learnTime)
+		private int Learn(ref bool learnedInThisCicle, Stopwatch stopwatch, int learnTime)
 		{
 			DirectPass();
 			int iterations = 0;
@@ -424,12 +436,15 @@ namespace RecurrentNeuronet2
 				Learn_a();
 				Learn_b();
 
-				isLearnedInThisCicle = true;
+				learnedInThisCicle = true;
 
 				iterations++;
 
 				if (I_old - I < 1E-15)
-					throw new Exception("too slow");
+				{
+					tooSlow = true;
+					return iterations;
+				}
 			}
 			return iterations;
 		}
