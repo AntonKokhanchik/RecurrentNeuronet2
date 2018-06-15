@@ -33,7 +33,7 @@ namespace RecurrentNeuronet2
 		private double[/*m*/] q;
 		private double[/*n+1*/][/*r*/] p; // множители Лагранжа
 
-		private double alpha; // скорость обучения
+		private double alpha, step; // скорость обучения
 		private double epsilon; // точность
 		private double I; // ошибка
 
@@ -185,54 +185,13 @@ namespace RecurrentNeuronet2
 
 		// Обратная связь
 
-		public RecurrentNeuronet(double[/*строк*/][/*слов*/][/*размерность слова*/] enters,
-			int innerLength, double accuracy, double step, int learnTime)
+		public void Learn(double[/*строк*/][/*слов*/][/*размерность слова*/] enters, int learnTime)
 		{
 			// сюда ещё можно исключений набросать, валидаторов
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
 			log = new StringBuilder("");
 			
-			n = MaxInnerLength(enters);
-			r = innerLength;
-			s = enters[0][0].Length;
-			m = enters.Length;
-
-			epsilon = accuracy;
-
-			V = new double[r][];
-			for (int i = 0; i < r; i++)
-			{
-				V[i] = new double[s];
-				for (int j = 0; j < s; j++)
-					V[i][j] = i+j;
-			}
-
-			U = new double[r][];
-			for (int i = 0; i < r; i++)
-			{
-				U[i] = new double[r];
-				for (int j = 0; j < r; j++)
-					U[i][j] = i-j;
-			}
-
-			W = new double[m][];
-			for (int i = 0; i < m; i++)
-			{
-				W[i] = new double[r];
-				for (int j = 0; j < r; j++)
-					W[i][j] = -i-j;
-			}
-
-			a = new double[r];
-			for (int j = 0; j < r; j++)
-				a[j] = j+3;
-
-			b = new double[m];
-			for (int i = 0; i < m; i++)
-				b[i] = i-8;
-
-
 			bool learnedInThisCicle;
 			do
 			{
@@ -249,23 +208,15 @@ namespace RecurrentNeuronet2
 							for (int k = 0; k < enters[i][j].Length; k++)
 								x[j + 1][k] = enters[i][j][k];
 					}
-
-					y = new double[m];
+					
 					d = new double[m];
 					d[i] = 1;
 
-					h = new double[n + 1][];
-					state = new double[n + 1][];
-					finalState = new double[m];
-					for (int j = 0; j <= n; j++)
-					{
-						h[j] = new double[r];
-						state[j] = new double[r];
-					}
+					int iterations = LearnOne(ref learnedInThisCicle, stopwatch, learnTime);
 
-					int iterations = Learn(ref learnedInThisCicle, stopwatch, learnTime);
 					log.AppendFormat("string {0}: {1} iterations, I = {2}, time: {3}:{4}:{5}", i, iterations, I,
 						stopwatch.Elapsed.Hours, stopwatch.Elapsed.Minutes, stopwatch.Elapsed.Seconds).AppendLine();
+
 					if (stopwatch.Elapsed.Minutes >= learnTime)
 					{
 						log.AppendLine("Time is off, learning stopped");
@@ -278,68 +229,67 @@ namespace RecurrentNeuronet2
 					}
 				}
 			} while (learnedInThisCicle && stopwatch.Elapsed.Minutes<learnTime && !tooSlow);
+
 			if (!learnedInThisCicle)
 				log.AppendLine("Learned successeful");
 		}
 
-		public void ContinueLearning(double[/*строк*/][/*слов*/][/*размерность слова*/] enters,
-		int innerLength, double accuracy, double step, int learnTime)
+		public RecurrentNeuronet(int n, int r, int s, int m, double accuracy, double step)
 		{
-			Stopwatch stopwatch = new Stopwatch();
-			stopwatch.Start();
-			log = new StringBuilder("");
+			this.n = n;
+			this.r = r;
+			this.s = s;
+			this.m = m;
+
 			epsilon = accuracy;
+			this.step = step;
 
-			bool learnedInThisCicle;
-			do
+			V = new double[r][];
+			for (int i = 0; i < r; i++)
 			{
-				learnedInThisCicle = false;
-				for (int i = 0; i < m; i++)
-				{
-					alpha = step;
-					x = new double[n + 1][];
-					for (int j = 0; j < n; j++)
-					{
-						x[j + 1] = new double[s];
-						if (j < enters[i].Length)
-							for (int k = 0; k < enters[i][j].Length; k++)
-								x[j + 1][k] = enters[i][j][k];
-					}
+				V[i] = new double[s];
+				for (int j = 0; j < s; j++)
+					V[i][j] = 1;
+			}
 
-					y = new double[m];
-					d = new double[m];
-					d[i] = 1;
+			U = new double[r][];
+			for (int i = 0; i < r; i++)
+			{
+				U[i] = new double[r];
+				for (int j = 0; j < r; j++)
+					U[i][j] = 1;
+			}
 
-					h = new double[n + 1][];
-					state = new double[n + 1][];
-					finalState = new double[m];
-					for (int j = 0; j <= n; j++)
-					{
-						h[j] = new double[r];
-						state[j] = new double[r];
-					}
+			W = new double[m][];
+			for (int i = 0; i < m; i++)
+			{
+				W[i] = new double[r];
+				for (int j = 0; j < r; j++)
+					W[i][j] = 1;
+			}
 
-					int iterations = Learn(ref learnedInThisCicle, stopwatch, learnTime);
-					log.AppendFormat("string {0}: {1} iterations, I = {2}, time: {3}:{4}:{5}", i, iterations, I,
-						stopwatch.Elapsed.Hours, stopwatch.Elapsed.Minutes, stopwatch.Elapsed.Seconds).AppendLine();
+			a = new double[r];
+			for (int j = 0; j < r; j++)
+				a[j] = 1;
 
-					if (stopwatch.Elapsed.Minutes >= learnTime)
-					{
-						log.AppendLine("Time is off, learning stopped");
-						break;
-					}
-					if (tooSlow)
-					{
-						log.AppendLine("Learning is too slow, stopped");
-						break;
-					}
-				}
-			} while (learnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime && !tooSlow);
-			if (!learnedInThisCicle)
-				log.AppendLine("Learned successeful");
+			b = new double[m];
+			for (int i = 0; i < m; i++)
+				b[i] = 1;
+
+			y = new double[m];
+			d = new double[m];
+
+			h = new double[n + 1][];
+			state = new double[n + 1][];
+			finalState = new double[m];
+			for (int j = 0; j <= n; j++)
+			{
+				h[j] = new double[r];
+				state[j] = new double[r];
+			}
 		}
 
-		private int Learn(ref bool learnedInThisCicle, Stopwatch stopwatch, int learnTime)
+		private int LearnOne(ref bool learnedInThisCicle, Stopwatch stopwatch, int learnTime)
 		{
 			DirectPass();
 			int iterations = 0;
@@ -400,7 +350,6 @@ namespace RecurrentNeuronet2
 			DirectPass();
 			return y;
 		}
-
 
 		public void WriteWeights(StreamWriter sw)
 		{
@@ -519,17 +468,6 @@ namespace RecurrentNeuronet2
 			finalState = new double[m];
 			y = new double[m];
 			d = new double[m];
-		}
-
-
-		// вспомогательное
-		private int MaxInnerLength(double[][][] a)
-		{
-			int max = a[0].Length;
-			for (int i = 1; i < a.Length; i++)
-				if (a[i].Length > max)
-					max = a[i].Length;
-			return max;
 		}
 	}
 }
