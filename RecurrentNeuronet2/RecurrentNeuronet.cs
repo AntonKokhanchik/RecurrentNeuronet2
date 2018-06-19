@@ -36,6 +36,7 @@ namespace RecurrentNeuronet2
 		private double step;
 		private double alpha_U; // скорость обучения
 		private double alpha_W;
+		private double alpha;
 		private double alpha_V;
 		private double alpha_a;
 		private double alpha_b;
@@ -43,10 +44,12 @@ namespace RecurrentNeuronet2
 		private double I; // ошибка
 
 		private bool tooSlow = false;
+		private bool error = false;
 
 		public StringBuilder log;
 
 		// Функции
+
 		private double kf = 1;
 		// f - функция активации скрытого слоя
 		private double f(double state)
@@ -76,6 +79,7 @@ namespace RecurrentNeuronet2
 
 
 		// Прямой проход:
+
 		private void DirectPass()
 		{
 			// для каждого вектора последовательности { x(1),…,x(n) } : 
@@ -115,6 +119,7 @@ namespace RecurrentNeuronet2
 		}
 
 		// Обратный проход:
+
 		private void BackwardPass()
 		{
 			// вычисляем ошибку выходного слоя q
@@ -136,7 +141,7 @@ namespace RecurrentNeuronet2
 			for (int t = n - 1; t >= 0; t--)
 			{
 				p[t] = new double[r];
-				for(int l = 0; l<r; l++)
+				for (int l = 0; l < r; l++)
 				{
 					double Spf1u = 0;
 					for (int i = 0; i < r; i++)
@@ -146,7 +151,8 @@ namespace RecurrentNeuronet2
 			}
 		}
 
-		// 3. Вычисляем изменение весов:
+		// Вычисляем изменение весов:
+
 		private void Change_U(bool badCase)
 		{
 			if (badCase)
@@ -324,53 +330,36 @@ namespace RecurrentNeuronet2
 				b[l] -= alpha_b * q[l] * g1(finalState[l]);
 		}
 
-		// Обратная связь
-
-		public void Learn(double[/*строк*/][/*слов*/][/*размерность слова*/] enters, int learnTime)
+		private void ChangeWeight(object weight, bool badCase)
 		{
-			// сюда ещё можно исключений набросать, валидаторов
-			Stopwatch stopwatch = new Stopwatch();
-			stopwatch.Start();
-			log = new StringBuilder("");
-			
-			bool learnedInThisCicle;
-			do
+			if (weight.Equals(U))
 			{
-				learnedInThisCicle = false;
-				for (int i = 0; i < m; i++)
-				{
-					x = new double[n + 1][];
-					for (int j = 0; j < n; j++)
-					{
-						x[j + 1] = new double[s];
-						if (j < enters[i].Length)
-							for (int k = 0; k < enters[i][j].Length; k++)
-								x[j + 1][k] = enters[i][j][k];
-					}
-					
-					d = new double[m];
-					d[i] = 1;
-
-					int iterations = LearnOne(ref learnedInThisCicle, stopwatch, learnTime);
-
-					log.AppendFormat("string {0}: {1} iterations, I = {2}, time: {3}:{4}:{5}", i, iterations, I, 
-						stopwatch.Elapsed.Hours, stopwatch.Elapsed.Minutes, stopwatch.Elapsed.Seconds).AppendLine();
-
-					if (stopwatch.Elapsed.Minutes >= learnTime)
-					{
-						log.AppendLine("Time is off, learning stopped");
-						break;
-					}
-					if (tooSlow)
-					{
-						log.AppendLine("Learning is too slow, stopped");
-						break;
-					}
-				}
-			} while (learnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime && !tooSlow);
-			if (!learnedInThisCicle)
-				log.AppendLine("Learned successeful");
+				Change_U(badCase);
+				alpha = alpha_U;
+			}
+			else if (weight.Equals(V))
+			{
+				Change_V(badCase);
+				alpha = alpha_V;
+			}
+			else if (weight.Equals(W))
+			{
+				Change_W(badCase);
+				alpha = alpha_W;
+			}
+			else if (weight.Equals(a))
+			{
+				Change_a(badCase);
+				alpha = alpha_a;
+			}
+			else if (weight.Equals(b))
+			{
+				Change_b(badCase);
+				alpha = alpha_b;
+			}
 		}
+
+		// Обратная связь
 
 		public RecurrentNeuronet(int n, int r, int s, int m, double accuracy, double step)
 		{
@@ -425,205 +414,6 @@ namespace RecurrentNeuronet2
 				h[j] = new double[r];
 				state[j] = new double[r];
 			}
-		}
-
-		private int LearnOne(ref bool learnedInThisCicle, Stopwatch stopwatch, int learnTime)
-		{
-			DirectPass();
-			int iterations = 0;
-			while (I > epsilon && stopwatch.Elapsed.Minutes < learnTime)
-			{
-				double I_old = I;
-				Learn_W();
-				Learn_V();
-				Learn_U();
-				Learn_a();
-				Learn_b();
-
-				learnedInThisCicle = true;
-
-				iterations++;
-
-				if (I_old - I < 1E-15)
-				{
-					tooSlow = true;
-					return iterations;
-				}
-			}
-			return iterations;
-		}
-
-		private void Learn_U()
-		{
-			double I_old = I;
-			double[][] U_old = new double[r][];
-			for (int j = 0; j < r; j++)
-				U_old[j] = (double[])U[j].Clone();
-
-			BackwardPass();
-			Change_U(false);
-			DirectPass();
-
-			while (I > I_old)
-			{
-				U = new double[r][];
-				for (int j = 0; j < r; j++)
-					U[j] = (double[])U_old[j].Clone();
-				DirectPass();
-				I_old = I;
-				if (alpha_U == 0)
-					break;
-				BackwardPass();
-				Change_U(true);
-				DirectPass();
-			}
-		}
-
-		private void Learn_V()
-		{
-			double I_old = I;
-			double[][] V_old = new double[r][];
-			for (int j = 0; j < r; j++)
-				V_old[j] = (double[])V[j].Clone();
-
-			BackwardPass();
-			Change_V(false);
-			DirectPass();
-
-			while (I > I_old)
-			{
-				V = new double[r][];
-				for (int j = 0; j < r; j++)
-					V[j] = (double[])V_old[j].Clone();
-				DirectPass();
-				I_old = I;
-				if (alpha_V == 0)
-					break;
-				BackwardPass();
-				Change_V(true);
-				DirectPass();
-			}
-		}
-
-		private void Learn_W()
-		{
-			double I_old = I;
-			double[][] W_old = new double[m][];
-			for (int j = 0; j < m; j++)
-				W_old[j] = (double[])W[j].Clone();
-			
-			BackwardPass();
-			Change_W(false);
-			DirectPass();
-			
-			while (I > I_old)
-			{
-				W = new double[m][];
-				for (int j = 0; j < m; j++)
-					W[j] = (double[])W_old[j].Clone();
-				DirectPass();
-				I_old = I;
-				if (alpha_W == 0)
-					break;
-				BackwardPass();
-				Change_W(true);
-				DirectPass();
-			}
-		}
-
-		private void Learn_a()
-		{
-			double I_old = I;
-			double[] a_old = (double[])a.Clone();
-
-			BackwardPass();
-			Change_a(false);
-			DirectPass();
-
-			while (I > I_old)
-			{
-				double[] a = (double[])a_old.Clone();
-				DirectPass();
-				I_old = I;
-				if (alpha_a == 0)
-					break;
-				BackwardPass();
-				Change_a(true);
-				DirectPass();
-			}
-		}
-
-		private void Learn_b()
-		{
-			double I_old = I;
-			double[] b_old = (double[])b.Clone();
-
-			BackwardPass();
-			Change_b(false);
-			DirectPass();
-
-			while (I > I_old)
-			{
-				double[] b = (double[])b_old.Clone();
-				DirectPass();
-				I_old = I;
-				if (alpha_b == 0)
-					break;
-				BackwardPass();
-				Change_b(true);
-				DirectPass();
-			}
-		}
-
-		public double[] Answer(double[][] enter)
-		{
-			x = new double[n + 1][];
-			for (int j = 0; j < n; j++)
-				if (j < enter.Length)
-					x[j + 1] = enter[j];
-				else
-					x[j + 1] = new double[enter[0].Length];
-			DirectPass();
-			return y;
-		}
-
-
-		public void WriteWeights(StreamWriter sw)
-		{
-			StringBuilder sb = new StringBuilder("");
-			sb.AppendLine("n r s m").AppendFormat("{0} {1} {2} {3}", n, r, s, m).AppendLine();
-			sb.AppendLine("U");
-			for (int i = 0; i < U.Length; i++)
-			{
-				for (int j = 0; j < U[0].Length; j++)
-					sb.AppendFormat("{0} ", U[i][j]);
-				sb.AppendLine();
-			}
-			sb.AppendLine("V");
-			for (int i = 0; i < V.Length; i++)
-			{
-				for (int j = 0; j < V[0].Length; j++)
-					sb.AppendFormat("{0} ", V[i][j]);
-				sb.AppendLine();
-			}
-			sb.AppendLine("W");
-			for (int i = 0; i < W.Length; i++)
-			{
-				for (int j = 0; j < W[0].Length; j++)
-					sb.AppendFormat("{0} ", W[i][j]);
-				sb.AppendLine();
-			}
-			sb.AppendLine("a");
-			for (int i = 0; i < a.Length; i++)
-				sb.AppendFormat("{0} ", a[i]);
-			sb.AppendLine();
-			
-			sb.AppendLine("b");
-			for (int i = 0; i < b.Length; i++)
-				sb.AppendFormat("{0} ", b[i]);
-			sb.AppendLine();
-
-			sw.Write(sb.ToString());
 		}
 
 		public RecurrentNeuronet(StreamReader sr)
@@ -705,6 +495,181 @@ namespace RecurrentNeuronet2
 			finalState = new double[m];
 			y = new double[m];
 			d = new double[m];
+		}
+
+		public void WriteWeights(StreamWriter sw)
+		{
+			StringBuilder sb = new StringBuilder("");
+			sb.AppendLine("n r s m").AppendFormat("{0} {1} {2} {3}", n, r, s, m).AppendLine();
+			sb.AppendLine("U");
+			for (int i = 0; i < U.Length; i++)
+			{
+				for (int j = 0; j < U[0].Length; j++)
+					sb.AppendFormat("{0} ", U[i][j]);
+				sb.AppendLine();
+			}
+			sb.AppendLine("V");
+			for (int i = 0; i < V.Length; i++)
+			{
+				for (int j = 0; j < V[0].Length; j++)
+					sb.AppendFormat("{0} ", V[i][j]);
+				sb.AppendLine();
+			}
+			sb.AppendLine("W");
+			for (int i = 0; i < W.Length; i++)
+			{
+				for (int j = 0; j < W[0].Length; j++)
+					sb.AppendFormat("{0} ", W[i][j]);
+				sb.AppendLine();
+			}
+			sb.AppendLine("a");
+			for (int i = 0; i < a.Length; i++)
+				sb.AppendFormat("{0} ", a[i]);
+			sb.AppendLine();
+
+			sb.AppendLine("b");
+			for (int i = 0; i < b.Length; i++)
+				sb.AppendFormat("{0} ", b[i]);
+			sb.AppendLine();
+
+			sw.Write(sb.ToString());
+		}
+
+		public void Learn(double[/*строк*/][/*слов*/][/*размерность слова*/] enters, int learnTime)
+		{
+			// сюда ещё можно исключений набросать, валидаторов
+			Stopwatch stopwatch = new Stopwatch();
+			stopwatch.Start();
+			log = new StringBuilder("");
+
+			bool learnedInThisCicle;
+			do
+			{
+				learnedInThisCicle = false;
+				for (int i = 0; i < m; i++)
+				{
+					x = new double[n + 1][];
+					for (int j = 0; j < n; j++)
+					{
+						x[j + 1] = new double[s];
+						if (j < enters[i].Length)
+							for (int k = 0; k < enters[i][j].Length; k++)
+								x[j + 1][k] = enters[i][j][k];
+					}
+
+					d = new double[m];
+					d[i] = 1;
+
+					int iterations = LearnOne(ref learnedInThisCicle, stopwatch, learnTime);
+
+					log.AppendFormat("string {0}: {1} iterations, I = {2}, time: {3}:{4}:{5}", i, iterations, I,
+						stopwatch.Elapsed.Hours, stopwatch.Elapsed.Minutes, stopwatch.Elapsed.Seconds).AppendLine();
+
+					if (stopwatch.Elapsed.Minutes >= learnTime)
+					{
+						log.AppendLine("Time is off, learning stopped");
+						break;
+					}
+					if (tooSlow)
+					{
+						log.AppendLine("Learning is too slow, stopped");
+						break;
+					}
+					if (error)
+					{
+						log.AppendLine("alphas are gone, stopped");
+						break;
+					}
+				}
+			} while (learnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime && !tooSlow);
+			if (!learnedInThisCicle)
+				log.AppendLine("Learned successeful");
+		}
+
+		public double[] Answer(double[][] enter)
+		{
+			x = new double[n + 1][];
+			for (int j = 0; j < n; j++)
+				if (j < enter.Length)
+					x[j + 1] = enter[j];
+				else
+					x[j + 1] = new double[enter[0].Length];
+			DirectPass();
+			return y;
+		}
+
+		private int LearnOne(ref bool learnedInThisCicle, Stopwatch stopwatch, int learnTime)
+		{
+			DirectPass();
+			int iterations = 0;
+			while (I > epsilon && stopwatch.Elapsed.Minutes < learnTime)
+			{
+				double I_old = I;
+				LearnWeight(U);
+				LearnWeight(V);
+				LearnWeight(W);
+				LearnWeight(a);
+				LearnWeight(b);
+
+				learnedInThisCicle = true;
+
+				iterations++;
+
+				if (I_old - I < 1E-20)
+				{
+					tooSlow = true;
+					return iterations;
+				}
+				if (alpha_a == 0 && alpha_b == 0 && alpha_U == 0 && alpha_V == 0 && alpha_W == 0)
+				{
+					error = true;
+					return iterations;
+				}
+
+			}
+			return iterations;
+		}
+
+		private void LearnWeight(object weight)
+		{
+			double I_old = I;
+
+			var weight_old = CopyWeight(weight);
+
+			BackwardPass();
+			ChangeWeight(weight, false);
+			DirectPass();
+
+			while (I > I_old)
+			{
+				// возвращаем старое состояние системы
+				weight = CopyWeight(weight_old);
+
+				DirectPass();
+				I_old = I;
+				if (alpha == 0)
+					break;
+				BackwardPass();
+				ChangeWeight(weight, true);
+				DirectPass();
+			}
+
+		}
+
+		private object CopyWeight(object weight)
+		{
+			if (weight.GetType().Equals(typeof(double[])))
+				return (weight as double[]).Clone();
+			else if (weight.GetType().Equals(typeof(double[][])))
+			{
+				double[][] w = weight as double[][];
+				double[][] copy = new double[w.Length][];
+				for (int j = 0; j < w.Length; j++)
+					copy[j] = (double[])w[j].Clone();
+				return copy;
+			}
+			else
+				throw new Exception();
 		}
 	}
 }
