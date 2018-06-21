@@ -69,7 +69,7 @@
 			// openFileDialogInput
 			// 
 			this.openFileDialogInput.FileName = "openFileDialog1";
-			this.openFileDialogInput.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialog1_FileOk);
+			this.openFileDialogInput.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialogInput_FileOk);
 			// 
 			// buttonLearn
 			// 
@@ -204,7 +204,7 @@
 			// 
 			// saveFileDialogResults
 			// 
-			this.saveFileDialogResults.FileOk += new System.ComponentModel.CancelEventHandler(this.saveFileDialog1_FileOk);
+			this.saveFileDialogResults.FileOk += new System.ComponentModel.CancelEventHandler(this.saveFileDialogResults_FileOk);
 			// 
 			// textBoxTime
 			// 
@@ -227,7 +227,7 @@
 			// 
 			// saveFileDialogLog
 			// 
-			this.saveFileDialogLog.FileOk += new System.ComponentModel.CancelEventHandler(this.saveFileDialog2_FileOk);
+			this.saveFileDialogLog.FileOk += new System.ComponentModel.CancelEventHandler(this.saveFileDialogLog_FileOk);
 			// 
 			// buttonSaveLog
 			// 
@@ -237,7 +237,7 @@
 			this.buttonSaveLog.TabIndex = 5;
 			this.buttonSaveLog.Text = "Записать отладочную информацию";
 			this.buttonSaveLog.UseVisualStyleBackColor = true;
-			this.buttonSaveLog.Click += new System.EventHandler(this.buttonSaveDebug_Click);
+			this.buttonSaveLog.Click += new System.EventHandler(this.buttonSaveLog_Click);
 			// 
 			// buttonLoadNet
 			// 

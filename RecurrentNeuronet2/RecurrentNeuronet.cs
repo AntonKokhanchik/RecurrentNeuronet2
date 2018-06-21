@@ -12,43 +12,39 @@ namespace RecurrentNeuronet2
 	{
 		// Параметры
 
-		private int n; // количество "повторов" (максимальное время)
-		private int r; // число нейронов на скрытом слое
-		private int s; // размерность входа
-		private int m; // размерность выхода
-		private double[/*n+1*/][/*s*/] x; // x[t] - входной вектор номер t,
-		private double[/*n+1*/][/*r*/] h; // h[t] - состояние скрытого слоя для входа x[t] (h[0]=0 ), 
-		private double[/*m*/] y; // y - выход сети для входа x, 
-		private double[/*r*/][/*s*/] V; // V - весовая матрица распределительного слоя,
+		private int n;  // количество "повторов" (Максимальное количество слов в предложении)
+		private int r;  // число нейронов на скрытом слое
+		private int s;  // размерность входа
+		private int m;  // размерность выхода
+
+		private double[/*n+1*/][/*s*/] x;   // x[t] - входной вектор номер t,
+		private double[/*n+1*/][/*r*/] h;   // h[t] - состояние скрытого слоя для входа x[t] (h[0]=0 ), 
+		private double[/*m*/] y;    // y - выход сети для входа x
+		private double[/*m*/] d;    // d - вектор правильных ответов
+
 		private double[/*r*/][/*r*/] U; // U - весовая(квадратная) матрица обратных связей скрытого слоя, 
-		private double[/*r*/] a; // bh - вектор сдвигов скрытого слоя,
+		private double[/*r*/][/*s*/] V; // V - весовая матрица распределительного слоя,
 		private double[/*m*/][/*r*/] W; // W - весовая матрица выходного слоя,
-		private double[/*m*/] b; // by - вектор сдвигов выходного слоя
+		private double[/*r*/] a;    // a - вектор сдвигов скрытого слоя,
+		private double[/*m*/] b;    // b - вектор сдвигов выходного слоя
 
-		private double[/*m*/] d; // d - вектор правильных ответов
-
-		private double[/*n+1*/][/*r*/] state;
+		private double[/*n+1*/][/*r*/] state;   // состояния системы
 		private double[/*m*/] finalState;
 
-		private double[/*m*/] q;
-		private double[/*n+1*/][/*r*/] p; // множители Лагранжа
+		private double[/*m*/] q;    // множители Лагранжа
+		private double[/*n+1*/][/*r*/] p;
 
-		private double step;
-		private double alpha_U; // скорость обучения
-		private double alpha_W;
-		private double alpha;
-		private double alpha_V;
-		private double alpha_a;
-		private double alpha_b;
+		private double step;    // скорость обучения (шаг градиентного спуска) по-умолчанию
+		private double alpha, alpha_U, alpha_V, alpha_W, alpha_a, alpha_b;  // скорость обучения (шаг градиентного спуска)
 		private double epsilon; // точность
-		private double I; // ошибка
+		private double I;   // ошибка
 
-		private bool tooSlow = false;
+		private bool tooSlow = false;   // флаги
 		private bool error = false;
 
-		public StringBuilder log;
+		public StringBuilder log;   // лог
 
-		// Функции
+		// Функции активации
 
 		private double kf = 1;
 		// f - функция активации скрытого слоя
@@ -153,183 +149,6 @@ namespace RecurrentNeuronet2
 
 		// Вычисляем изменение весов:
 
-		private void Change_U(bool badCase)
-		{
-			if (badCase)
-			{
-				alpha_U /= 2;
-				if (alpha_U == 0)
-					return;
-			}
-			else
-			{
-				double dmax = 0;
-				double max = 0;
-				for (int l = 0; l < r; l++)
-					for (int k = 0; k < r; k++)
-					{
-						double tmp = 0;
-						for (int t = 0; t < n; t++)
-							tmp += p[t + 1][l] * f1(state[t + 1][l]) * h[t][k];
-						if (dmax < tmp)
-							dmax = tmp;
-						if (max < U[l][k])
-							max = U[l][k];
-					}
-				if (dmax == 0 || max == 0)
-					alpha_U = step;
-				else
-					alpha_U = 0.1 * max / dmax;
-			}
-
-			for (int l = 0; l < r; l++)
-				for (int k = 0; k < r; k++)
-				{
-					double Spf1h = 0;
-					for (int t = 0; t < n; t++)
-						Spf1h += p[t + 1][l] * f1(state[t + 1][l]) * h[t][k];
-					U[l][k] -= alpha_U * Spf1h;
-				}
-		}
-
-		private void Change_V(bool badCase)
-		{
-			if (badCase)
-			{
-				alpha_V /= 2;
-				if (alpha_V == 0)
-					return;
-			}
-			else
-			{
-				double dmax = 0;
-				double max = 0;
-				for (int l = 0; l < r; l++)
-					for (int k = 0; k < s; k++)
-					{
-						double tmp = 0;
-						for (int t = 0; t < n; t++)
-							tmp += p[t + 1][l] * f1(state[t + 1][l]) * x[t + 1][k];
-						if (dmax < tmp)
-							dmax = tmp;
-						if (max < V[l][k])
-							max = V[l][k];
-					}
-				if (dmax == 0 || max == 0)
-					alpha_V = step;
-				else
-					alpha_V = 0.1 * max / dmax;
-			}
-
-			for (int l = 0; l < r; l++)
-				for (int k = 0; k < s; k++)
-				{
-					double Spf1x = 0;
-					for (int t = 0; t < n; t++)
-						Spf1x += p[t + 1][l] * f1(state[t + 1][l]) * x[t + 1][k];
-					V[l][k] -= alpha_V * Spf1x;
-				}
-		}
-
-		private void Change_W(bool badCase)
-		{
-			if (badCase)
-			{
-				alpha_W /= 2;
-				if (alpha_W == 0)
-					return;
-			}
-			else
-			{
-				double dmax = 0;
-				double max = 0;
-				for (int l = 0; l < W.Length; l++)
-					for (int k = 0; k < W[l].Length; k++)
-					{
-						double tmp = q[l] * g1(finalState[l]) * h[n][k];
-						if (dmax < tmp)
-							dmax = tmp;
-						if (max < W[l][k])
-							max = W[l][k];
-					}
-				if (dmax == 0 || max == 0)
-					alpha_W = step;
-				else
-					alpha_W = 0.1 * max / dmax;
-			}
-
-			for (int l = 0; l < m; l++)
-				for (int k = 0; k < r; k++)
-					W[l][k] -= alpha_W * q[l] * g1(finalState[l]) * h[n][k];
-		}
-
-		private void Change_a(bool badCase)
-		{
-			if (badCase)
-			{
-				alpha_a /= 2;
-				if (alpha_a == 0)
-					return;
-			}
-			else
-			{
-				double dmax = 0;
-				double max = 0;
-				for (int l = 0; l < r; l++)
-				{
-					double tmp = 0;
-					for (int t = 0; t < n; t++)
-						tmp += p[t + 1][l] * f1(state[t + 1][l]);
-					if (dmax < tmp)
-						dmax = tmp;
-					if (max < a[l])
-						max = a[l];
-				}
-				if (dmax == 0 || max == 0)
-					alpha_a = step;
-				else
-					alpha_a = 0.1 * max / dmax;
-			}
-
-			for (int l = 0; l < r; l++)
-			{
-				double Spf1 = 0;
-				for (int t = 0; t < n; t++)
-					Spf1 += p[t + 1][l] * f1(state[t + 1][l]);
-				a[l] -= alpha_a * Spf1;
-			}
-		}
-
-		private void Change_b(bool badCase)
-		{
-			if (badCase)
-			{
-				alpha_b /= 2;
-				if (alpha_b == 0)
-					return;
-			}
-			else
-			{
-				double dmax = 0;
-				double max = 0;
-				for (int l = 0; l < m; l++)
-				{
-					double tmp = q[l] * g1(finalState[l]);
-					if (dmax < tmp)
-						dmax = tmp;
-					if (max < b[l])
-						max = b[l];
-				}
-				if (dmax == 0 || max == 0)
-					alpha_b = step;
-				else
-					alpha_b = 0.1 * max / dmax;
-			}
-
-			for (int l = 0; l < m; l++)
-				b[l] -= alpha_b * q[l] * g1(finalState[l]);
-		}
-
 		private void ChangeWeight(object weight, bool badCase)
 		{
 			if (weight.Equals(U))
@@ -359,8 +178,204 @@ namespace RecurrentNeuronet2
 			}
 		}
 
+		private void Change_U(bool badCase)
+		{
+			// рассчёт шага градиентного спуска
+			if (badCase)
+			{
+				alpha_U /= 2;
+				if (alpha_U == 0)
+					return;
+			}
+			else
+			{
+				double dmax = 0;
+				double max = 0;
+				for (int l = 0; l < r; l++)
+					for (int k = 0; k < r; k++)
+					{
+						double tmp = 0;
+						for (int t = 0; t < n; t++)
+							tmp += p[t + 1][l] * f1(state[t + 1][l]) * h[t][k];
+						if (dmax < tmp)
+							dmax = tmp;
+						if (max < U[l][k])
+							max = U[l][k];
+					}
+				if (dmax == 0 || max == 0)
+					alpha_U = step;
+				else
+					alpha_U = 0.1 * max / dmax;
+			}
+
+			// рассчёт веса
+			for (int l = 0; l < r; l++)
+				for (int k = 0; k < r; k++)
+				{
+					double Spf1h = 0;
+					for (int t = 0; t < n; t++)
+						Spf1h += p[t + 1][l] * f1(state[t + 1][l]) * h[t][k];
+					U[l][k] -= alpha_U * Spf1h;
+				}
+		}
+
+		private void Change_V(bool badCase)
+		{
+			// рассчёт шага градиентного спуска
+			if (badCase)
+			{
+				alpha_V /= 2;
+				if (alpha_V == 0)
+					return;
+			}
+			else
+			{
+				double dmax = 0;
+				double max = 0;
+				for (int l = 0; l < r; l++)
+					for (int k = 0; k < s; k++)
+					{
+						double tmp = 0;
+						for (int t = 0; t < n; t++)
+							tmp += p[t + 1][l] * f1(state[t + 1][l]) * x[t + 1][k];
+						if (dmax < tmp)
+							dmax = tmp;
+						if (max < V[l][k])
+							max = V[l][k];
+					}
+				if (dmax == 0 || max == 0)
+					alpha_V = step;
+				else
+					alpha_V = 0.1 * max / dmax;
+			}
+
+			// рассчёт веса
+			for (int l = 0; l < r; l++)
+				for (int k = 0; k < s; k++)
+				{
+					double Spf1x = 0;
+					for (int t = 0; t < n; t++)
+						Spf1x += p[t + 1][l] * f1(state[t + 1][l]) * x[t + 1][k];
+					V[l][k] -= alpha_V * Spf1x;
+				}
+		}
+
+		private void Change_W(bool badCase)
+		{
+			// рассчёт шага градиентного спуска
+			if (badCase)
+			{
+				alpha_W /= 2;
+				if (alpha_W == 0)
+					return;
+			}
+			else
+			{
+				double dmax = 0;
+				double max = 0;
+				for (int l = 0; l < W.Length; l++)
+					for (int k = 0; k < W[l].Length; k++)
+					{
+						double tmp = q[l] * g1(finalState[l]) * h[n][k];
+						if (dmax < tmp)
+							dmax = tmp;
+						if (max < W[l][k])
+							max = W[l][k];
+					}
+				if (dmax == 0 || max == 0)
+					alpha_W = step;
+				else
+					alpha_W = 0.1 * max / dmax;
+			}
+
+			// рассчёт веса
+			for (int l = 0; l < m; l++)
+				for (int k = 0; k < r; k++)
+					W[l][k] -= alpha_W * q[l] * g1(finalState[l]) * h[n][k];
+		}
+
+		private void Change_a(bool badCase)
+		{
+			// рассчёт шага градиентного спуска
+			if (badCase)
+			{
+				alpha_a /= 2;
+				if (alpha_a == 0)
+					return;
+			}
+			else
+			{
+				double dmax = 0;
+				double max = 0;
+				for (int l = 0; l < r; l++)
+				{
+					double tmp = 0;
+					for (int t = 0; t < n; t++)
+						tmp += p[t + 1][l] * f1(state[t + 1][l]);
+					if (dmax < tmp)
+						dmax = tmp;
+					if (max < a[l])
+						max = a[l];
+				}
+				if (dmax == 0 || max == 0)
+					alpha_a = step;
+				else
+					alpha_a = 0.1 * max / dmax;
+			}
+
+			// рассчёт веса
+			for (int l = 0; l < r; l++)
+			{
+				double Spf1 = 0;
+				for (int t = 0; t < n; t++)
+					Spf1 += p[t + 1][l] * f1(state[t + 1][l]);
+				a[l] -= alpha_a * Spf1;
+			}
+		}
+
+		private void Change_b(bool badCase)
+		{
+			// рассчёт шага градиентного спуска
+			if (badCase)
+			{
+				alpha_b /= 2;
+				if (alpha_b == 0)
+					return;
+			}
+			else
+			{
+				double dmax = 0;
+				double max = 0;
+				for (int l = 0; l < m; l++)
+				{
+					double tmp = q[l] * g1(finalState[l]);
+					if (dmax < tmp)
+						dmax = tmp;
+					if (max < b[l])
+						max = b[l];
+				}
+				if (dmax == 0 || max == 0)
+					alpha_b = step;
+				else
+					alpha_b = 0.1 * max / dmax;
+			}
+
+			// рассчёт веса
+			for (int l = 0; l < m; l++)
+				b[l] -= alpha_b * q[l] * g1(finalState[l]);
+		}
+
 		// Обратная связь
 
+		/// <summary>
+		/// конструктор, инициализирует массивы и применяет входные параметры
+		/// </summary>
+		/// <param name="n">Максимальное количество слов в предложении</param>
+		/// <param name="r">Число нейронов на скрытом слое</param>
+		/// <param name="s">Размерность входа</param>
+		/// <param name="m">Размерность выхода</param>
+		/// <param name="accuracy">Точность вычислений</param>
+		/// <param name="step">Начальный шаг градиентного спуска</param>
 		public RecurrentNeuronet(int n, int r, int s, int m, double accuracy, double step)
 		{
 			this.n = n;
@@ -416,6 +431,9 @@ namespace RecurrentNeuronet2
 			}
 		}
 
+		/// <summary>
+		/// Конструктор чтения из файла
+		/// </summary>
 		public RecurrentNeuronet(StreamReader sr)
 		{
 			string tmp = sr.ReadLine();
@@ -497,6 +515,9 @@ namespace RecurrentNeuronet2
 			d = new double[m];
 		}
 
+		/// <summary>
+		/// Запись весов в файл
+		/// </summary>
 		public void WriteWeights(StreamWriter sw)
 		{
 			StringBuilder sb = new StringBuilder("");
@@ -535,14 +556,18 @@ namespace RecurrentNeuronet2
 			sw.Write(sb.ToString());
 		}
 
-		public void Learn(double[/*строк*/][/*слов*/][/*размерность слова*/] enters, int learnTime)
+		/// <summary>
+		/// Начать или продолжить обучение нейронной сети
+		/// </summary>
+		/// <param name="enters">Закодированная бучающая выборка [число строк][число слов][размерность кода слова]</param>
+		/// <param name="learnTime">Ограничение на обучение по времени</param>
+		public void Learn(double[/*число строк*/][/*число слов*/][/*размерность кода слова*/] enters, int learnTime)
 		{
-			// сюда ещё можно исключений набросать, валидаторов
+			log = new StringBuilder("");
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
-			log = new StringBuilder("");
 
-			bool learnedInThisCicle;
+			bool learnedInThisCicle;	// обучались ли в этом круге?
 			do
 			{
 				learnedInThisCicle = false;
@@ -564,7 +589,6 @@ namespace RecurrentNeuronet2
 
 					log.AppendFormat("string {0}: {1} iterations, I = {2}, time: {3}:{4}:{5}", i, iterations, I,
 						stopwatch.Elapsed.Hours, stopwatch.Elapsed.Minutes, stopwatch.Elapsed.Seconds).AppendLine();
-
 					if (stopwatch.Elapsed.Minutes >= learnTime)
 					{
 						log.AppendLine("Time is off, learning stopped");
@@ -581,12 +605,18 @@ namespace RecurrentNeuronet2
 						break;
 					}
 				}
-			} while (learnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime && !tooSlow);
+			} while (learnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime && !tooSlow && !error);
+
 			if (!learnedInThisCicle)
 				log.AppendLine("Learned successeful");
 		}
 
-		public double[] Answer(double[][] enter)
+		/// <summary>
+		/// Возвращает ответ нейронной сети
+		/// </summary>
+		/// <param name="enter">Закодированное входное предложение [число слов][размерность кода слова]</param>
+		/// <returns></returns>
+		public double[] Answer(double[/*слов*/][/*размерность кода слова*/] enter)
 		{
 			x = new double[n + 1][];
 			for (int j = 0; j < n; j++)
@@ -598,10 +628,13 @@ namespace RecurrentNeuronet2
 			return y;
 		}
 
+		// обучение на одном входе
 		private int LearnOne(ref bool learnedInThisCicle, Stopwatch stopwatch, int learnTime)
 		{
-			DirectPass();
 			int iterations = 0;
+
+			DirectPass();
+
 			while (I > epsilon && stopwatch.Elapsed.Minutes < learnTime)
 			{
 				double I_old = I;
@@ -612,7 +645,6 @@ namespace RecurrentNeuronet2
 				LearnWeight(b);
 
 				learnedInThisCicle = true;
-
 				iterations++;
 
 				if (I_old - I < 1E-20)
@@ -625,11 +657,11 @@ namespace RecurrentNeuronet2
 					error = true;
 					return iterations;
 				}
-
 			}
 			return iterations;
 		}
 
+		// обучение одного веса (покоординатный градиентный спуск)
 		private void LearnWeight(object weight)
 		{
 			double I_old = I;
@@ -656,6 +688,7 @@ namespace RecurrentNeuronet2
 
 		}
 
+		// создаёт копию весов в зависимости от того, одномерный это или двумерный массив
 		private object CopyWeight(object weight)
 		{
 			if (weight.GetType().Equals(typeof(double[])))

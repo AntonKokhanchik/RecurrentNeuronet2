@@ -21,17 +21,27 @@ namespace RecurrentNeuronet2
         {
             InitializeComponent();
         }
-
+		
+		// выбираем файл с обучающей выборкой
         private void buttonSelectFile_Click(object sender, EventArgs e)
         {
+			// вызываем диалог выбора файла
             openFileDialogInput.ShowDialog();
         }
 
-        private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
+		// выбрали файл с обучающей выборкой
+        private void openFileDialogInput_FileOk(object sender, CancelEventArgs e)
         {
+			// получаем массив массивов слов
             string[][] text = getWords();
+
+			// создаём кодировщик
             encoder = new SumEncoder(text);
+
+			// получаем закодированный текст
 			encodedText = encoder.EncodeText(text);
+
+			// включаем элементы формы
 			label2.Enabled = true;
 			label3.Enabled = true;
 			label5.Enabled = true;
@@ -43,21 +53,7 @@ namespace RecurrentNeuronet2
 			textBoxTime.Enabled = true;
 		}
 
-        private string[][] getWords()
-        {
-            List<string[]> text = new List<string[]>();
-			using (StreamReader file = new StreamReader(openFileDialogInput.OpenFile(), Encoding.UTF8))
-			{
-				string s = file.ReadLine();
-				while (s != null)
-				{
-					text.Add(s.Split(' '));
-					s = file.ReadLine();
-				}
-			}
-			return text.ToArray();
-        }
-
+		// начинаем обучение нейросети
 		private void buttonLearn_Click(object sender, EventArgs e)
 		{
 			neuronet = new RecurrentNeuronet(MaxInnerLength(encodedText), Int32.Parse(textBoxInnerLength.Value.ToString()), 
@@ -68,28 +64,33 @@ namespace RecurrentNeuronet2
 			buttonContinueLearn.Enabled = true;
 		}
 
+		// получаем ответ обученной нейросети на одном входе
 		private void buttonAnswer_Click(object sender, EventArgs e)
 		{
 			textBoxAnswer.Text = String.Concat(neuronet.Answer(encoder.EncodeString(textBoxString.Text)));
 		}
 
+		// выбираем файл для выходной информации (будут представлены все входы обучающей выборки и все выходы на них)
 		private void buttonExitFile_Click(object sender, EventArgs e)
 		{
 			saveFileDialogResults.ShowDialog();
 		}
 
-		private void saveFileDialog1_FileOk(object sender, CancelEventArgs e)
+		// получаем результаты и выводим в файл
+		private void saveFileDialogResults_FileOk(object sender, CancelEventArgs e)
 		{
 			using (StreamWriter sw = new StreamWriter(saveFileDialogResults.OpenFile()))
 			{
 				double[][] answers = new double[encodedText.Length][];
 				StringBuilder sb = new StringBuilder("\t");
+
 				for (int i = 0; i < encodedText.Length; i++)
 				{
 					answers[i] = (double[])neuronet.Answer(encodedText[i]).Clone();
 					sb.AppendFormat("{0}\t", i+1);
 				}
 				sw.WriteLine(sb.ToString());
+
 				for (int i = 0; i < encodedText.Length; i++)
 				{
 					sb = new StringBuilder((i+1).ToString());
@@ -106,12 +107,14 @@ namespace RecurrentNeuronet2
 			}
 		}
 
-		private void buttonSaveDebug_Click(object sender, EventArgs e)
+		// выбираем файл для логов
+		private void buttonSaveLog_Click(object sender, EventArgs e)
 		{
 			saveFileDialogLog.ShowDialog();
 		}
 
-		private void saveFileDialog2_FileOk(object sender, CancelEventArgs e)
+		// сохраняем лог
+		private void saveFileDialogLog_FileOk(object sender, CancelEventArgs e)
 		{
 			using (StreamWriter sw = new StreamWriter(saveFileDialogLog.OpenFile()))
 			{
@@ -119,11 +122,13 @@ namespace RecurrentNeuronet2
 			}
 		}
 
+		// выбираем файл для сохранения весов
 		private void buttonSaveNet_Click(object sender, EventArgs e)
 		{
 			saveFileDialogNet.ShowDialog();
 		}
 
+		// сохраняем веса
 		private void saveFileDialogNet_FileOk(object sender, CancelEventArgs e)
 		{
 			using (StreamWriter sw = new StreamWriter(saveFileDialogNet.OpenFile()))
@@ -132,11 +137,13 @@ namespace RecurrentNeuronet2
 			}
 		}
 
+		// выбираем файл для загрузки весов
 		private void buttonLoadNet_Click(object sender, EventArgs e)
 		{
 			openFileDialogLoadNet.ShowDialog();
 		}
 
+		// загружаем веса
 		private void openFileDialogLoadNet_FileOk(object sender, CancelEventArgs e)
 		{
 			using (StreamReader sr = new StreamReader(openFileDialogLoadNet.OpenFile(), Encoding.UTF8))
@@ -147,12 +154,16 @@ namespace RecurrentNeuronet2
 			buttonContinueLearn.Enabled = true;
 		}
 
+		// продолжаем обучение
 		private void buttonContinueLearn_Click(object sender, EventArgs e)
 		{
 			neuronet.Learn(encodedText, int.Parse(textBoxTime.Text));
 		}
 
 
+		/// <summary>
+		/// находим max a[i].Length
+		/// </summary>
 		private int MaxInnerLength(double[][][] a)
 		{
 			int max = a[0].Length;
@@ -160,6 +171,24 @@ namespace RecurrentNeuronet2
 				if (a[i].Length > max)
 					max = a[i].Length;
 			return max;
+		}
+
+		/// <summary>
+		/// получаем набор предложений и слов из файла
+		/// </summary>
+		private string[][] getWords()
+		{
+			List<string[]> text = new List<string[]>();
+			using (StreamReader file = new StreamReader(openFileDialogInput.OpenFile(), Encoding.UTF8))
+			{
+				string s = file.ReadLine();
+				while (s != null)
+				{
+					text.Add(s.Split(' '));
+					s = file.ReadLine();
+				}
+			}
+			return text.ToArray();
 		}
 	}
 }
