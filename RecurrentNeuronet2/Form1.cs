@@ -11,26 +11,38 @@ using System.Windows.Forms;
 
 namespace RecurrentNeuronet2
 {
-    public partial class Form1 : Form
-    {
-        IEncoder encoder;
-        RecurrentNeuronet neuronet;
+	public partial class Form1 : Form
+	{
+		IEncoder encoder;
+		RecurrentNeuronet neuronet;
 		double[][][] encodedText;
 
-        public Form1()
-        {
-            InitializeComponent();
-        }
+		public bool learnStopped = false;
 
-        private void buttonSelectFile_Click(object sender, EventArgs e)
-        {
-            openFileDialogInput.ShowDialog();
-        }
+		public delegate void CrossTread();
 
-        private void openFileDialog1_FileOk(object sender, CancelEventArgs e)
-        {
-            string[][] text = getWords();
-            encoder = new SumEncoder(text);
+		public Form1()
+		{
+			InitializeComponent();
+		}
+
+		// выбираем файл с обучающей выборкой
+		private void buttonSelectFile_Click(object sender, EventArgs e)
+		{
+			// вызываем диалог выбора файла
+			openFileDialogInput.ShowDialog();
+		}
+
+		// выбрали файл с обучающей выборкой
+		private void openFileDialogInput_FileOk(object sender, CancelEventArgs e)
+		{
+			// получаем массив массивов слов
+			string[][] text = getWords();
+
+			// создаём кодировщик
+			encoder = new SumEncoder(text);
+
+			// получаем закодированный текст
 			encodedText = encoder.EncodeText(text);
 			label2.Enabled = true;
 			label3.Enabled = true;
@@ -41,31 +53,23 @@ namespace RecurrentNeuronet2
 			textBoxAlpha.Enabled = true;
 			buttonLearn.Enabled = true;
 			textBoxTime.Enabled = true;
-		}
+			buttonLoadNet.Enabled = true;
 
-        private string[][] getWords()
-        {
-            List<string[]> text = new List<string[]>();
-			using (StreamReader file = new StreamReader(openFileDialogInput.OpenFile(), Encoding.UTF8))
-			{
-				string s = file.ReadLine();
-				while (s != null)
-				{
-					text.Add(s.Split(' '));
-					s = file.ReadLine();
-				}
-			}
-			return text.ToArray();
-        }
+			buttonContinueLearn.Enabled = false;
+			label4.Enabled = false;
+			textBoxString.Enabled = false;
+			buttonAnswer.Enabled = false;
+			buttonExitFile.Enabled = false;
+			buttonSaveLog.Enabled = false;
+			textBoxAnswer.Enabled = false;
+		}
 
 		private void buttonLearn_Click(object sender, EventArgs e)
 		{
-			neuronet = new RecurrentNeuronet(MaxInnerLength(encodedText), Int32.Parse(textBoxInnerLength.Value.ToString()), 
+			neuronet = new RecurrentNeuronet(MaxInnerLength(encodedText), Int32.Parse(textBoxInnerLength.Value.ToString()),
 				encodedText[0][0].Length, encodedText.Length, double.Parse(textBoxEpsilon.Text), double.Parse(textBoxAlpha.Text));
 
-			neuronet.Learn(encodedText, int.Parse(textBoxTime.Text));
-
-			buttonContinueLearn.Enabled = true;
+			StartAsyncLearn();
 		}
 
 		private void buttonAnswer_Click(object sender, EventArgs e)
@@ -87,12 +91,12 @@ namespace RecurrentNeuronet2
 				for (int i = 0; i < encodedText.Length; i++)
 				{
 					answers[i] = (double[])neuronet.Answer(encodedText[i]).Clone();
-					sb.AppendFormat("{0}\t", i+1);
+					sb.AppendFormat("{0}\t", i + 1);
 				}
 				sw.WriteLine(sb.ToString());
 				for (int i = 0; i < encodedText.Length; i++)
 				{
-					sb = new StringBuilder((i+1).ToString());
+					sb = new StringBuilder((i + 1).ToString());
 					for (int j = 0; j < encodedText[i].Length; j++)
 					{
 						sb.AppendFormat(" \t{0}", encodedText[i][j][0]);
@@ -145,14 +149,69 @@ namespace RecurrentNeuronet2
 			}
 
 			buttonContinueLearn.Enabled = true;
+			label4.Enabled = true;
+			textBoxString.Enabled = true;
+			buttonAnswer.Enabled = true;
+			buttonExitFile.Enabled = true;
+			buttonSaveLog.Enabled = true;
+			textBoxAnswer.Enabled = true;
 		}
 
 		private void buttonContinueLearn_Click(object sender, EventArgs e)
 		{
-			neuronet.Learn(encodedText, int.Parse(textBoxTime.Text));
+			StartAsyncLearn();
+		}
+
+		// остановка обучения
+		private void buttonStop_Click(object sender, EventArgs e)
+		{
+			learnStopped = true;
 		}
 
 
+		// Запускает обучение во втором потоке
+		private void StartAsyncLearn()
+		{
+			Task t = new Task(() =>
+			{
+				BeginInvoke(new CrossTread(PreLearn));
+				neuronet.Learn(encodedText, int.Parse(textBoxTime.Text), StopCheck);
+				BeginInvoke(new CrossTread(PostLearn));
+			});
+	
+			t.Start();
+		}
+		// вспомогательные функции для AsyncLearn
+		private void PreLearn()
+		{
+			learnStopped = false;
+			buttonStop.Enabled = true;
+			buttonLearn.Enabled = false;
+			buttonContinueLearn.Enabled = false;
+		}
+		private void PostLearn()
+		{
+			buttonStop.Enabled = false;
+			buttonLearn.Enabled = true;
+			buttonContinueLearn.Enabled = true;
+
+			buttonContinueLearn.Enabled = true;
+			label4.Enabled = true;
+			textBoxString.Enabled = true;
+			buttonAnswer.Enabled = true;
+			buttonExitFile.Enabled = true;
+			buttonSaveLog.Enabled = true;
+			textBoxAnswer.Enabled = true;
+		}
+		private bool StopCheck()
+		{
+			return learnStopped;
+		}
+
+
+		/// <summary>
+		/// находим max a[i].Length
+		/// </summary>
 		private int MaxInnerLength(double[][][] a)
 		{
 			int max = a[0].Length;
@@ -161,5 +220,25 @@ namespace RecurrentNeuronet2
 					max = a[i].Length;
 			return max;
 		}
+
+		/// <summary>
+		/// получаем набор предложений и слов из файла
+		/// </summary>
+		private string[][] getWords()
+		{
+			List<string[]> text = new List<string[]>();
+			using (StreamReader file = new StreamReader(openFileDialogInput.OpenFile(), Encoding.UTF8))
+			{
+				string s = file.ReadLine();
+				while (s != null)
+				{
+					text.Add(s.Split(' '));
+					s = file.ReadLine();
+				}
+			}
+			return text.ToArray();
+		}
+
+		
 	}
 }

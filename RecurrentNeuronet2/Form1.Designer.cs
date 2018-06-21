@@ -53,6 +53,7 @@
 			this.saveFileDialogNet = new System.Windows.Forms.SaveFileDialog();
 			this.openFileDialogLoadNet = new System.Windows.Forms.OpenFileDialog();
 			this.buttonContinueLearn = new System.Windows.Forms.Button();
+			this.buttonStop = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.textBoxInnerLength)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -69,7 +70,7 @@
 			// openFileDialogInput
 			// 
 			this.openFileDialogInput.FileName = "openFileDialog1";
-			this.openFileDialogInput.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialog1_FileOk);
+			this.openFileDialogInput.FileOk += new System.ComponentModel.CancelEventHandler(this.openFileDialogInput_FileOk);
 			// 
 			// buttonLearn
 			// 
@@ -140,6 +141,7 @@
 			// 
 			// textBoxString
 			// 
+			this.textBoxString.Enabled = false;
 			this.textBoxString.Location = new System.Drawing.Point(12, 169);
 			this.textBoxString.Multiline = true;
 			this.textBoxString.Name = "textBoxString";
@@ -148,6 +150,7 @@
 			// 
 			// buttonAnswer
 			// 
+			this.buttonAnswer.Enabled = false;
 			this.buttonAnswer.Location = new System.Drawing.Point(12, 226);
 			this.buttonAnswer.Name = "buttonAnswer";
 			this.buttonAnswer.Size = new System.Drawing.Size(120, 22);
@@ -158,15 +161,17 @@
 			// 
 			// textBoxAnswer
 			// 
-			this.textBoxAnswer.Location = new System.Drawing.Point(309, 226);
+			this.textBoxAnswer.Enabled = false;
+			this.textBoxAnswer.Location = new System.Drawing.Point(138, 226);
 			this.textBoxAnswer.Name = "textBoxAnswer";
 			this.textBoxAnswer.ReadOnly = true;
-			this.textBoxAnswer.Size = new System.Drawing.Size(90, 20);
+			this.textBoxAnswer.Size = new System.Drawing.Size(261, 20);
 			this.textBoxAnswer.TabIndex = 2;
 			// 
 			// label4
 			// 
 			this.label4.AutoSize = true;
+			this.label4.Enabled = false;
 			this.label4.Location = new System.Drawing.Point(12, 153);
 			this.label4.Name = "label4";
 			this.label4.Size = new System.Drawing.Size(43, 13);
@@ -194,6 +199,7 @@
 			// 
 			// buttonExitFile
 			// 
+			this.buttonExitFile.Enabled = false;
 			this.buttonExitFile.Location = new System.Drawing.Point(12, 254);
 			this.buttonExitFile.Name = "buttonExitFile";
 			this.buttonExitFile.Size = new System.Drawing.Size(172, 24);
@@ -231,6 +237,7 @@
 			// 
 			// buttonSaveLog
 			// 
+			this.buttonSaveLog.Enabled = false;
 			this.buttonSaveLog.Location = new System.Drawing.Point(205, 255);
 			this.buttonSaveLog.Name = "buttonSaveLog";
 			this.buttonSaveLog.Size = new System.Drawing.Size(194, 23);
@@ -241,6 +248,7 @@
 			// 
 			// buttonLoadNet
 			// 
+			this.buttonLoadNet.Enabled = false;
 			this.buttonLoadNet.Location = new System.Drawing.Point(274, 12);
 			this.buttonLoadNet.Name = "buttonLoadNet";
 			this.buttonLoadNet.Size = new System.Drawing.Size(125, 24);
@@ -251,6 +259,7 @@
 			// 
 			// buttonSaveNet
 			// 
+			this.buttonSaveNet.Enabled = false;
 			this.buttonSaveNet.Location = new System.Drawing.Point(274, 60);
 			this.buttonSaveNet.Name = "buttonSaveNet";
 			this.buttonSaveNet.Size = new System.Drawing.Size(125, 24);
@@ -279,6 +288,17 @@
 			this.buttonContinueLearn.UseVisualStyleBackColor = true;
 			this.buttonContinueLearn.Click += new System.EventHandler(this.buttonContinueLearn_Click);
 			// 
+			// buttonStop
+			// 
+			this.buttonStop.Enabled = false;
+			this.buttonStop.Location = new System.Drawing.Point(274, 113);
+			this.buttonStop.Name = "buttonStop";
+			this.buttonStop.Size = new System.Drawing.Size(120, 22);
+			this.buttonStop.TabIndex = 1;
+			this.buttonStop.Text = "Стоп";
+			this.buttonStop.UseVisualStyleBackColor = true;
+			this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
+			// 
 			// Form1
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -299,6 +319,7 @@
 			this.Controls.Add(this.textBoxEpsilon);
 			this.Controls.Add(this.buttonAnswer);
 			this.Controls.Add(this.buttonContinueLearn);
+			this.Controls.Add(this.buttonStop);
 			this.Controls.Add(this.buttonLearn);
 			this.Controls.Add(this.buttonSaveNet);
 			this.Controls.Add(this.buttonLoadNet);
@@ -339,6 +360,7 @@
 		private System.Windows.Forms.SaveFileDialog saveFileDialogNet;
 		private System.Windows.Forms.OpenFileDialog openFileDialogLoadNet;
 		private System.Windows.Forms.Button buttonContinueLearn;
+		private System.Windows.Forms.Button buttonStop;
 	}
 }
 
