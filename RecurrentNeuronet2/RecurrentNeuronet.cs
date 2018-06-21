@@ -11,7 +11,7 @@ namespace RecurrentNeuronet2
 	class RecurrentNeuronet
 	{
 		// Параметры
-
+		
 		private int n;  // количество "повторов" (Максимальное количество слов в предложении)
 		private int r;  // число нейронов на скрытом слое
 		private int s;  // размерность входа
@@ -561,7 +561,7 @@ namespace RecurrentNeuronet2
 		/// </summary>
 		/// <param name="enters">Закодированная бучающая выборка [число строк][число слов][размерность кода слова]</param>
 		/// <param name="learnTime">Ограничение на обучение по времени</param>
-		public void Learn(double[/*число строк*/][/*число слов*/][/*размерность кода слова*/] enters, int learnTime)
+		public void Learn(double[/*число строк*/][/*число слов*/][/*размерность кода слова*/] enters, int learnTime, Func<bool> StopCheck)
 		{
 			log = new StringBuilder("");
 			Stopwatch stopwatch = new Stopwatch();
@@ -585,7 +585,7 @@ namespace RecurrentNeuronet2
 					d = new double[m];
 					d[i] = 1;
 
-					int iterations = LearnOne(ref learnedInThisCicle, stopwatch, learnTime);
+					int iterations = LearnOne(ref learnedInThisCicle, stopwatch, learnTime, StopCheck);
 
 					log.AppendFormat("string {0}: {1} iterations, I = {2}, time: {3}:{4}:{5}", i, iterations, I,
 						stopwatch.Elapsed.Hours, stopwatch.Elapsed.Minutes, stopwatch.Elapsed.Seconds).AppendLine();
@@ -604,8 +604,13 @@ namespace RecurrentNeuronet2
 						log.AppendLine("alphas are gone, stopped");
 						break;
 					}
+					if (StopCheck())
+					{
+						log.AppendLine("Interrupted by user, stopped");
+						break;
+					}
 				}
-			} while (learnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime && !tooSlow && !error);
+			} while (learnedInThisCicle && stopwatch.Elapsed.Minutes < learnTime && !tooSlow && !error && !StopCheck());
 
 			if (!learnedInThisCicle)
 				log.AppendLine("Learned successeful");
@@ -629,13 +634,13 @@ namespace RecurrentNeuronet2
 		}
 
 		// обучение на одном входе
-		private int LearnOne(ref bool learnedInThisCicle, Stopwatch stopwatch, int learnTime)
+		private int LearnOne(ref bool learnedInThisCicle, Stopwatch stopwatch, int learnTime, Func<bool> StopCheck)
 		{
 			int iterations = 0;
 
 			DirectPass();
 
-			while (I > epsilon && stopwatch.Elapsed.Minutes < learnTime)
+			while (I > epsilon && stopwatch.Elapsed.Minutes < learnTime && !StopCheck())
 			{
 				double I_old = I;
 				LearnWeight(U);

@@ -11,32 +11,36 @@ using System.Windows.Forms;
 
 namespace RecurrentNeuronet2
 {
-    public partial class Form1 : Form
-    {
-        IEncoder encoder;
-        RecurrentNeuronet neuronet;
+	public partial class Form1 : Form
+	{
+		IEncoder encoder;
+		RecurrentNeuronet neuronet;
 		double[][][] encodedText;
 
-        public Form1()
-        {
-            InitializeComponent();
-        }
-		
+		public bool learnStopped = false;
+
+		public delegate void CrossTread();
+
+		public Form1()
+		{
+			InitializeComponent();
+		}
+
 		// выбираем файл с обучающей выборкой
-        private void buttonSelectFile_Click(object sender, EventArgs e)
-        {
+		private void buttonSelectFile_Click(object sender, EventArgs e)
+		{
 			// вызываем диалог выбора файла
-            openFileDialogInput.ShowDialog();
-        }
+			openFileDialogInput.ShowDialog();
+		}
 
 		// выбрали файл с обучающей выборкой
-        private void openFileDialogInput_FileOk(object sender, CancelEventArgs e)
-        {
+		private void openFileDialogInput_FileOk(object sender, CancelEventArgs e)
+		{
 			// получаем массив массивов слов
-            string[][] text = getWords();
+			string[][] text = getWords();
 
 			// создаём кодировщик
-            encoder = new SumEncoder(text);
+			encoder = new SumEncoder(text);
 
 			// получаем закодированный текст
 			encodedText = encoder.EncodeText(text);
@@ -51,17 +55,24 @@ namespace RecurrentNeuronet2
 			textBoxAlpha.Enabled = true;
 			buttonLearn.Enabled = true;
 			textBoxTime.Enabled = true;
+			buttonLoadNet.Enabled = true;
+
+			buttonContinueLearn.Enabled = false;
+			label4.Enabled = false;
+			textBoxString.Enabled = false;
+			buttonAnswer.Enabled = false;
+			buttonExitFile.Enabled = false;
+			buttonSaveLog.Enabled = false;
+			textBoxAnswer.Enabled = false;
 		}
 
 		// начинаем обучение нейросети
 		private void buttonLearn_Click(object sender, EventArgs e)
 		{
-			neuronet = new RecurrentNeuronet(MaxInnerLength(encodedText), Int32.Parse(textBoxInnerLength.Value.ToString()), 
+			neuronet = new RecurrentNeuronet(MaxInnerLength(encodedText), Int32.Parse(textBoxInnerLength.Value.ToString()),
 				encodedText[0][0].Length, encodedText.Length, double.Parse(textBoxEpsilon.Text), double.Parse(textBoxAlpha.Text));
 
-			neuronet.Learn(encodedText, int.Parse(textBoxTime.Text));
-
-			buttonContinueLearn.Enabled = true;
+			StartAsyncLearn();
 		}
 
 		// получаем ответ обученной нейросети на одном входе
@@ -87,13 +98,13 @@ namespace RecurrentNeuronet2
 				for (int i = 0; i < encodedText.Length; i++)
 				{
 					answers[i] = (double[])neuronet.Answer(encodedText[i]).Clone();
-					sb.AppendFormat("{0}\t", i+1);
+					sb.AppendFormat("{0}\t", i + 1);
 				}
 				sw.WriteLine(sb.ToString());
 
 				for (int i = 0; i < encodedText.Length; i++)
 				{
-					sb = new StringBuilder((i+1).ToString());
+					sb = new StringBuilder((i + 1).ToString());
 					for (int j = 0; j < encodedText[i].Length; j++)
 					{
 						sb.AppendFormat(" \t{0}", encodedText[i][j][0]);
@@ -152,12 +163,64 @@ namespace RecurrentNeuronet2
 			}
 
 			buttonContinueLearn.Enabled = true;
+			label4.Enabled = true;
+			textBoxString.Enabled = true;
+			buttonAnswer.Enabled = true;
+			buttonExitFile.Enabled = true;
+			buttonSaveLog.Enabled = true;
+			textBoxAnswer.Enabled = true;
 		}
 
 		// продолжаем обучение
 		private void buttonContinueLearn_Click(object sender, EventArgs e)
 		{
-			neuronet.Learn(encodedText, int.Parse(textBoxTime.Text));
+			StartAsyncLearn();
+		}
+
+		// остановка обучения
+		private void buttonStop_Click(object sender, EventArgs e)
+		{
+			learnStopped = true;
+		}
+
+
+		// Запускает обучение во втором потоке
+		private void StartAsyncLearn()
+		{
+			Task t = new Task(() =>
+			{
+				BeginInvoke(new CrossTread(PreLearn));
+				neuronet.Learn(encodedText, int.Parse(textBoxTime.Text), StopCheck);
+				BeginInvoke(new CrossTread(PostLearn));
+			});
+	
+			t.Start();
+		}
+		// вспомогательные функции для AsyncLearn
+		private void PreLearn()
+		{
+			learnStopped = false;
+			buttonStop.Enabled = true;
+			buttonLearn.Enabled = false;
+			buttonContinueLearn.Enabled = false;
+		}
+		private void PostLearn()
+		{
+			buttonStop.Enabled = false;
+			buttonLearn.Enabled = true;
+			buttonContinueLearn.Enabled = true;
+
+			buttonContinueLearn.Enabled = true;
+			label4.Enabled = true;
+			textBoxString.Enabled = true;
+			buttonAnswer.Enabled = true;
+			buttonExitFile.Enabled = true;
+			buttonSaveLog.Enabled = true;
+			textBoxAnswer.Enabled = true;
+		}
+		private bool StopCheck()
+		{
+			return learnStopped;
 		}
 
 
@@ -190,5 +253,7 @@ namespace RecurrentNeuronet2
 			}
 			return text.ToArray();
 		}
+
+		
 	}
 }
