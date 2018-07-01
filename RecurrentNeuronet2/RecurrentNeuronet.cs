@@ -203,7 +203,7 @@ namespace RecurrentNeuronet2
 			{
 				V[i] = new double[s];
 				for (int j = 0; j < s; j++)
-					V[i][j] = 1;
+					V[i][j] = i+j;
 			}
 
 			U = new double[r][];
@@ -211,7 +211,7 @@ namespace RecurrentNeuronet2
 			{
 				U[i] = new double[r];
 				for (int j = 0; j < r; j++)
-					U[i][j] = 1;
+					U[i][j] = i-j;
 			}
 
 			W = new double[m][];
@@ -219,16 +219,16 @@ namespace RecurrentNeuronet2
 			{
 				W[i] = new double[r];
 				for (int j = 0; j < r; j++)
-					W[i][j] = 1;
+					W[i][j] = -i-j;
 			}
 
 			a = new double[r];
 			for (int j = 0; j < r; j++)
-				a[j] = 1;
+				a[j] = j+3;
 
 			b = new double[m];
 			for (int i = 0; i < m; i++)
-				b[i] = 1;
+				b[i] = i-8;
 
 			y = new double[m];
 			d = new double[m];
